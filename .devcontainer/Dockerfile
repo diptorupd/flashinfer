@@ -15,6 +15,11 @@ RUN apt-get update && apt-get install -y \
     zsh \
     && rm -rf /var/lib/apt/lists/*
 
+RUN apt-get update && apt-get install -y wget bzip2 \
+    && wget -qO-  https://micro.mamba.pm/api/micromamba/linux-64/latest | tar -xvj bin/micromamba \
+    && apt-get clean autoremove --yes \
+    && rm -rf /var/lib/{apt,dpkg,cache,log}
+
 # Install oh-my-zsh
 RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
 
@@ -26,7 +31,7 @@ RUN git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.
 
 # Configure zsh
 RUN sed -i 's/ZSH_THEME="robbyrussell"/ZSH_THEME="powerlevel10k\/powerlevel10k"/' ~/.zshrc && \
-    sed -i 's/plugins=(git)/plugins=(git zsh-autosuggestions)/' ~/.zshrc
+    sed -i 's/plugins=(git)/plugins=(git conda-env zsh-autosuggestions)/' ~/.zshrc
 
 # Create a non-root user
 ARG USERNAME=devuser
@@ -52,6 +57,8 @@ RUN cp -r /root/.oh-my-zsh /home/$USERNAME/.oh-my-zsh && \
 # Switch to non-root user
 USER $USERNAME
 WORKDIR /home/$USERNAME
+
+RUN /bin/micromamba shell init -s zsh -r /home/$USERNAME/micromamba
 
 # Set zsh as default shell
 ENV SHELL=/bin/zsh
