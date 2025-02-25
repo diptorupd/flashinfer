@@ -23,7 +23,9 @@ endif()
 
 find_package(Python3 REQUIRED)
 if(NOT Python3_FOUND)
-  message(FATAL_ERROR "Python3 not found it is required to generate the kernel sources.")
+  message(
+    FATAL_ERROR
+      "Python3 not found it is required to generate the kernel sources.")
 endif()
 
 find_package(Thrust REQUIRED)
@@ -41,40 +43,35 @@ flashinfer_option(FLASHINFER_ENABLE_F16
                   "Whether to compile f16 kernels or not." ON)
 flashinfer_option(FLASHINFER_ENABLE_BF16
                   "Whether to compile bf16 kernels or not." ON)
-flashinfer_option(FLASHINFER_PREFILL
-                  "Whether to compile prefill kernel tests/benchmarks or not." OFF)
-flashinfer_option(FLASHINFER_DECODE 
-                  "Whether to compile decode kernel tests/benchmarks or not."  OFF)
-flashinfer_option(FLASHINFER_PAGE
-                  "Whether to compile page kernel tests/benchmarks or not." OFF)
-flashinfer_option(FLASHINFER_CASCADE
-                  "Whether to compile cascade kernel tests/benchmarks or not." OFF)
-flashinfer_option(FLASHINFER_SAMPLING
-                  "Whether to compile sampling kernel tests/benchmarks or not." OFF)
-flashinfer_option(FLASHINFER_NORM
-                  "Whether to compile normalization kernel tests/benchmarks or not." OFF)
-flashinfer_option(FLASHINFER_DISTRIBUTED
-                  "Whether to compile distributed kernel tests/benchmarks or not." OFF)
-# Option to build the Gtests for libflashinfer CUDA kernels
-flashinfer_option(FLASHINFER_UNITTESTS
-                  "Build libflashinfer C++ google tests" OFF)
-flashinfer_option(FLASHINFER_FASTDIV_TEST
-                  "Whether to compile fastdiv kernel tests or not." OFF)
-flashinfer_option(FLASHINFER_FASTDEQAUNT_TEST
-                  "Whether to compile fast dequant kernel tests or not." OFF)
+# flashinfer_option(FLASHINFER_PREFILL "Whether to compile prefill kernel
+# tests/benchmarks or not." OFF) flashinfer_option(FLASHINFER_DECODE "Whether to
+# compile decode kernel tests/benchmarks or not."  OFF)
+# flashinfer_option(FLASHINFER_PAGE "Whether to compile page kernel
+# tests/benchmarks or not." OFF) flashinfer_option(FLASHINFER_CASCADE "Whether
+# to compile cascade kernel tests/benchmarks or not." OFF)
+# flashinfer_option(FLASHINFER_SAMPLING "Whether to compile sampling kernel
+# tests/benchmarks or not." OFF) flashinfer_option(FLASHINFER_NORM "Whether to
+# compile normalization kernel tests/benchmarks or not." OFF)
+# flashinfer_option(FLASHINFER_DISTRIBUTED "Whether to compile distributed
+# kernel tests/benchmarks or not." OFF) Option to build the Gtests for
+# libflashinfer CUDA kernels
+flashinfer_option(FLASHINFER_UNITTESTS "Build libflashinfer C++ google tests"
+                  OFF)
+# flashinfer_option(FLASHINFER_FASTDIV_TEST "Whether to compile fastdiv kernel
+# tests or not." OFF) flashinfer_option(FLASHINFER_FASTDEQAUNT_TEST "Whether to
+# compile fast dequant kernel tests or not." OFF)
 flashinfer_option(FLASHINFER_TVM_BINDING
                   "Whether to compile tvm binding or not." OFF)
 flashinfer_option(FLASHINFER_TVM_SOURCE_DIR
                   "The path to tvm for building tvm binding." "")
-# The following configurations can impact the binary size of the generated library
-flashinfer_option(FLASHINFER_GEN_HEAD_DIMS 
-                  "Head dims to enable" 64 128 256)
-flashinfer_option(FLASHINFER_GEN_POS_ENCODING_MODES 
-                  "Pos encodings to enable" 0 1 2)
+# The following configurations can impact the binary size of the generated
+# library
+flashinfer_option(FLASHINFER_GEN_HEAD_DIMS "Head dims to enable" 64 128 256)
+flashinfer_option(FLASHINFER_GEN_POS_ENCODING_MODES "Pos encodings to enable" 0
+                  1 2)
 flashinfer_option(FLASHINFER_GEN_USE_FP16_QK_REDUCTIONS
                   "QK reductions to enable" "false" "true")
-flashinfer_option(FLASHINFER_GEN_MASK_MODES 
-                  "Mask modes to enable" 0 1 2)
+flashinfer_option(FLASHINFER_GEN_MASK_MODES "Mask modes to enable" 0 1 2)
 
 if(DEFINED FLASHINFER_CUDA_ARCHITECTURES)
   message(
@@ -84,26 +81,14 @@ else(DEFINED FLASHINFER_CUDA_ARCHITECTURES)
   message(STATUS "CMAKE_CUDA_ARCHITECTURES is ${CMAKE_CUDA_ARCHITECTURES}")
 endif(DEFINED FLASHINFER_CUDA_ARCHITECTURES)
 
-# if(FLASHINFER_PREFILL
-#    OR FLASHINFER_DECODE
-#    OR FLASHINFER_PAGE
-#    OR FLASHINFER_CASCADE
-#    OR FLASHINFER_SAMPLING
-#    OR FLASHINFER_NORM)
-#   message(STATUS "NVBench and GoogleTest enabled")
-#   add_subdirectory(3rdparty/nvbench)
-#   if(FLASHINFER_DISTRIBUTED)
-#     add_subdirectory(3rdparty/mscclpp)
-#   else(FLASHINFER_DISTRIBUTED)
-#     add_subdirectory(3rdparty/googletest)
-#   endif(FLASHINFER_DISTRIBUTED)
-# endif(
-#   FLASHINFER_PREFILL
-#   OR FLASHINFER_DECODE
-#   OR FLASHINFER_PAGE
-#   OR FLASHINFER_CASCADE
-#   OR FLASHINFER_SAMPLING
-#   OR FLASHINFER_NORM)
+# if(FLASHINFER_PREFILL OR FLASHINFER_DECODE OR FLASHINFER_PAGE OR
+# FLASHINFER_CASCADE OR FLASHINFER_SAMPLING OR FLASHINFER_NORM) message(STATUS
+# "NVBench and GoogleTest enabled") add_subdirectory(3rdparty/nvbench)
+# if(FLASHINFER_DISTRIBUTED) add_subdirectory(3rdparty/mscclpp)
+# else(FLASHINFER_DISTRIBUTED) add_subdirectory(3rdparty/googletest)
+# endif(FLASHINFER_DISTRIBUTED) endif( FLASHINFER_PREFILL OR FLASHINFER_DECODE
+# OR FLASHINFER_PAGE OR FLASHINFER_CASCADE OR FLASHINFER_SAMPLING OR
+# FLASHINFER_NORM)
 
 set(FLASHINFER_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
 
@@ -182,7 +167,7 @@ target_compile_options(prefill_kernels PRIVATE -Xcompiler=-fPIC
                                                --fatbin-options -compress-all)
 
 if(FLASHINFER_UNITTESTS)
-    add_subdirectory(docs)
+  add_subdirectory(docs)
 endif(FLASHINFER_UNITTESTS)
 
 if(FLASHINFER_DECODE)
@@ -199,18 +184,16 @@ if(FLASHINFER_DECODE)
                         PRIVATE nvbench::main decode_kernels prefill_kernels)
   target_compile_options(bench_single_decode PRIVATE -Wno-switch-bool)
 
-  # message(STATUS "Compile single decode kernel tests.")
-  # file(GLOB_RECURSE TEST_DECODE_SRCS
-  #      ${PROJECT_SOURCE_DIR}/src/test_single_decode.cu)
+  # message(STATUS "Compile single decode kernel tests.") file(GLOB_RECURSE
+  # TEST_DECODE_SRCS ${PROJECT_SOURCE_DIR}/src/test_single_decode.cu)
   # add_executable(test_single_decode ${TEST_DECODE_SRCS})
-  # target_include_directories(test_single_decode
-  #                            PRIVATE ${FLASHINFER_INCLUDE_DIR})
-  # target_include_directories(
-  #   test_single_decode PRIVATE ${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
+  # target_include_directories(test_single_decode PRIVATE
+  # ${FLASHINFER_INCLUDE_DIR}) target_include_directories( test_single_decode
+  # PRIVATE ${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
   # add_dependencies(test_single_decode dispatch_inc)
   # target_link_libraries(test_single_decode PRIVATE gtest gtest_main
-  #                                                  decode_kernels)
-  # target_compile_options(test_single_decode PRIVATE -Wno-switch-bool)
+  # decode_kernels) target_compile_options(test_single_decode PRIVATE
+  # -Wno-switch-bool)
 
   message(STATUS "Compile batch decode kernel benchmarks.")
   file(GLOB_RECURSE BENCH_DECODE_SRCS
@@ -238,18 +221,16 @@ if(FLASHINFER_DECODE)
                                                        decode_kernels)
   target_compile_options(bench_batch_decode_mla PRIVATE -Wno-switch-bool)
 
-  # message(STATUS "Compile batch decode kernel tests.")
-  # file(GLOB_RECURSE TEST_DECODE_SRCS
-  #      ${PROJECT_SOURCE_DIR}/src/test_batch_decode.cu)
+  # message(STATUS "Compile batch decode kernel tests.") file(GLOB_RECURSE
+  # TEST_DECODE_SRCS ${PROJECT_SOURCE_DIR}/src/test_batch_decode.cu)
   # add_executable(test_batch_decode ${TEST_DECODE_SRCS})
-  # target_include_directories(test_batch_decode
-  #                            PRIVATE ${FLASHINFER_INCLUDE_DIR})
-  # target_include_directories(
-  #   test_batch_decode PRIVATE ${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
+  # target_include_directories(test_batch_decode PRIVATE
+  # ${FLASHINFER_INCLUDE_DIR}) target_include_directories( test_batch_decode
+  # PRIVATE ${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
   # add_dependencies(test_batch_decode dispatch_inc)
   # target_link_libraries(test_batch_decode PRIVATE gtest gtest_main
-  #                                                 decode_kernels)
-  # target_compile_options(test_batch_decode PRIVATE -Wno-switch-bool)
+  # decode_kernels) target_compile_options(test_batch_decode PRIVATE
+  # -Wno-switch-bool)
 endif(FLASHINFER_DECODE)
 
 if(FLASHINFER_PREFILL)
@@ -266,18 +247,16 @@ if(FLASHINFER_PREFILL)
                                                      prefill_kernels)
   target_compile_options(bench_single_prefill PRIVATE -Wno-switch-bool)
 
-  # message(STATUS "Compile single prefill kernel tests.")
-  # file(GLOB_RECURSE TEST_PREFILL_SRCS
-  #      ${PROJECT_SOURCE_DIR}/src/test_single_prefill.cu)
+  # message(STATUS "Compile single prefill kernel tests.") file(GLOB_RECURSE
+  # TEST_PREFILL_SRCS ${PROJECT_SOURCE_DIR}/src/test_single_prefill.cu)
   # add_executable(test_single_prefill ${TEST_PREFILL_SRCS})
-  # target_include_directories(test_single_prefill
-  #                            PRIVATE ${FLASHINFER_INCLUDE_DIR})
-  # target_include_directories(
-  #   test_single_prefill PRIVATE ${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
+  # target_include_directories(test_single_prefill PRIVATE
+  # ${FLASHINFER_INCLUDE_DIR}) target_include_directories( test_single_prefill
+  # PRIVATE ${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
   # add_dependencies(test_single_prefill dispatch_inc)
   # target_link_libraries(test_single_prefill PRIVATE gtest gtest_main
-  #                                                   prefill_kernels)
-  # target_compile_options(test_single_prefill PRIVATE -Wno-switch-bool)
+  # prefill_kernels) target_compile_options(test_single_prefill PRIVATE
+  # -Wno-switch-bool)
 
   message(STATUS "Compile batch prefill kernel benchmarks.")
   file(GLOB_RECURSE BENCH_PREFILL_SRCS
@@ -292,29 +271,25 @@ if(FLASHINFER_PREFILL)
                                                     prefill_kernels)
   target_compile_options(bench_batch_prefill PRIVATE -Wno-switch-bool)
 
-  # message(STATUS "Compile batch prefill kernel tests.")
-  # file(GLOB_RECURSE TEST_PREFILL_SRCS
-  #      ${PROJECT_SOURCE_DIR}/src/test_batch_prefill.cu)
+  # message(STATUS "Compile batch prefill kernel tests.") file(GLOB_RECURSE
+  # TEST_PREFILL_SRCS ${PROJECT_SOURCE_DIR}/src/test_batch_prefill.cu)
   # add_executable(test_batch_prefill ${TEST_PREFILL_SRCS})
-  # target_include_directories(test_batch_prefill
-  #                            PRIVATE ${FLASHINFER_INCLUDE_DIR})
-  # target_include_directories(
-  #   test_batch_prefill PRIVATE ${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
+  # target_include_directories(test_batch_prefill PRIVATE
+  # ${FLASHINFER_INCLUDE_DIR}) target_include_directories( test_batch_prefill
+  # PRIVATE ${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
   # add_dependencies(test_batch_prefill dispatch_inc)
   # target_link_libraries(test_batch_prefill PRIVATE gtest gtest_main
-  #                                                  prefill_kernels)
-  # target_compile_options(test_batch_prefill PRIVATE -Wno-switch-bool)
+  # prefill_kernels) target_compile_options(test_batch_prefill PRIVATE
+  # -Wno-switch-bool)
 endif(FLASHINFER_PREFILL)
 
-# if(FLASHINFER_PAGE)
-#   message(STATUS "Compile page kernel tests.")
-#   file(GLOB_RECURSE TEST_PAGE_SRCS ${PROJECT_SOURCE_DIR}/src/test_page.cu)
-#   add_executable(test_page ${TEST_PAGE_SRCS})
-#   target_include_directories(test_page PRIVATE ${FLASHINFER_INCLUDE_DIR})
-#   target_include_directories(test_page PRIVATE ${gtest_SOURCE_DIR}/include
-#                                                ${gtest_SOURCE_DIR})
-#   target_link_libraries(test_page PRIVATE gtest gtest_main)
-#   target_compile_options(test_page PRIVATE -Wno-switch-bool)
+# if(FLASHINFER_PAGE) message(STATUS "Compile page kernel tests.")
+# file(GLOB_RECURSE TEST_PAGE_SRCS ${PROJECT_SOURCE_DIR}/src/test_page.cu)
+# add_executable(test_page ${TEST_PAGE_SRCS})
+# target_include_directories(test_page PRIVATE ${FLASHINFER_INCLUDE_DIR})
+# target_include_directories(test_page PRIVATE ${gtest_SOURCE_DIR}/include
+# ${gtest_SOURCE_DIR}) target_link_libraries(test_page PRIVATE gtest gtest_main)
+# target_compile_options(test_page PRIVATE -Wno-switch-bool)
 # endif(FLASHINFER_PAGE)
 
 if(FLASHINFER_CASCADE)
@@ -330,16 +305,15 @@ if(FLASHINFER_CASCADE)
                                               prefill_kernels)
   target_compile_options(bench_cascade PRIVATE -Wno-switch-bool)
 
-  # message(STATUS "Compile cascade kernel tests.")
-  # file(GLOB_RECURSE TEST_CASCADE_SRCS ${PROJECT_SOURCE_DIR}/src/test_cascade.cu)
+  # message(STATUS "Compile cascade kernel tests.") file(GLOB_RECURSE
+  # TEST_CASCADE_SRCS ${PROJECT_SOURCE_DIR}/src/test_cascade.cu)
   # add_executable(test_cascade ${TEST_CASCADE_SRCS})
   # target_include_directories(test_cascade PRIVATE ${FLASHINFER_INCLUDE_DIR})
   # target_include_directories(test_cascade PRIVATE ${gtest_SOURCE_DIR}/include
-  #                                                 ${gtest_SOURCE_DIR})
-  # add_dependencies(test_cascade dispatch_inc)
+  # ${gtest_SOURCE_DIR}) add_dependencies(test_cascade dispatch_inc)
   # target_link_libraries(test_cascade PRIVATE gtest gtest_main decode_kernels
-  #                                            prefill_kernels)
-  # target_compile_options(test_cascade PRIVATE -Wno-switch-bool)
+  # prefill_kernels) target_compile_options(test_cascade PRIVATE
+  # -Wno-switch-bool)
 endif(FLASHINFER_CASCADE)
 
 if(FLASHINFER_SAMPLING)
@@ -353,15 +327,13 @@ if(FLASHINFER_SAMPLING)
   target_link_libraries(bench_sampling PRIVATE nvbench::main)
   target_compile_options(bench_sampling PRIVATE -Wno-switch-bool)
 
-  # message(STATUS "Compile sampling kernel tests.")
-  # file(GLOB_RECURSE TEST_SAMPLING_SRCS
-  #      ${PROJECT_SOURCE_DIR}/src/test_sampling.cu)
+  # message(STATUS "Compile sampling kernel tests.") file(GLOB_RECURSE
+  # TEST_SAMPLING_SRCS ${PROJECT_SOURCE_DIR}/src/test_sampling.cu)
   # add_executable(test_sampling ${TEST_SAMPLING_SRCS})
   # target_include_directories(test_sampling PRIVATE ${FLASHINFER_INCLUDE_DIR})
   # target_include_directories(test_sampling PRIVATE ${gtest_SOURCE_DIR}/include
-  #                                                  ${gtest_SOURCE_DIR})
-  # target_link_libraries(test_sampling PRIVATE gtest gtest_main)
-  # target_compile_options(test_sampling PRIVATE -Wno-switch-bool)
+  # ${gtest_SOURCE_DIR}) target_link_libraries(test_sampling PRIVATE gtest
+  # gtest_main) target_compile_options(test_sampling PRIVATE -Wno-switch-bool)
 endif(FLASHINFER_SAMPLING)
 
 if(FLASHINFER_NORM)
@@ -374,14 +346,13 @@ if(FLASHINFER_NORM)
   target_link_libraries(bench_norm PRIVATE nvbench::main)
   target_compile_options(bench_norm PRIVATE -Wno-switch-bool)
 
-  # message(STATUS "Compile normalization kernel tests.")
-  # file(GLOB_RECURSE TEST_NORM_SRCS ${PROJECT_SOURCE_DIR}/src/test_norm.cu)
+  # message(STATUS "Compile normalization kernel tests.") file(GLOB_RECURSE
+  # TEST_NORM_SRCS ${PROJECT_SOURCE_DIR}/src/test_norm.cu)
   # add_executable(test_norm ${TEST_NORM_SRCS})
   # target_include_directories(test_norm PRIVATE ${FLASHINFER_INCLUDE_DIR})
   # target_include_directories(test_norm PRIVATE ${gtest_SOURCE_DIR}/include
-  #                                              ${gtest_SOURCE_DIR})
-  # target_link_libraries(test_norm PRIVATE gtest gtest_main)
-  # target_compile_options(test_norm PRIVATE -Wno-switch-bool)
+  # ${gtest_SOURCE_DIR}) target_link_libraries(test_norm PRIVATE gtest
+  # gtest_main) target_compile_options(test_norm PRIVATE -Wno-switch-bool)
 endif(FLASHINFER_NORM)
 
 if(FLASHINFER_TVM_BINDING)
@@ -397,8 +368,7 @@ if(FLASHINFER_TVM_BINDING)
       FATAL_ERROR
         "Error: Cannot find TVM. Please set the path to TVM by                       \
         1) adding `-DFLASHINFER_TVM_SOURCE_DIR=path/to/tvm` in the cmake command, or \
-        2) setting the environment variable `TVM_SOURCE_DIR` to the tvm path."
-    )
+        2) setting the environment variable `TVM_SOURCE_DIR` to the tvm path.")
   endif()
   message(STATUS "FlashInfer uses TVM home ${TVM_SOURCE_DIR_SET}.")
 
@@ -419,50 +389,41 @@ if(FLASHINFER_TVM_BINDING)
                                                 "1305" -Wno-switch-bool)
 endif(FLASHINFER_TVM_BINDING)
 
-# if(FLASHINFER_FASTDIV_TEST)
-#   message(STATUS "Compile fastdiv test.")
-#   file(GLOB_RECURSE TEST_FASTDIV_SRCS ${PROJECT_SOURCE_DIR}/src/test_fastdiv.cu)
-#   add_executable(test_fastdiv ${TEST_FASTDIV_SRCS})
-#   target_include_directories(test_fastdiv PRIVATE ${FLASHINFER_INCLUDE_DIR})
-#   target_include_directories(test_fastdiv PRIVATE ${gtest_SOURCE_DIR}/include
-#                                                   ${gtest_SOURCE_DIR})
-#   target_link_libraries(test_fastdiv PRIVATE gtest gtest_main)
-# endif(FLASHINFER_FASTDIV_TEST)
+# if(FLASHINFER_FASTDIV_TEST) message(STATUS "Compile fastdiv test.")
+# file(GLOB_RECURSE TEST_FASTDIV_SRCS ${PROJECT_SOURCE_DIR}/src/test_fastdiv.cu)
+# add_executable(test_fastdiv ${TEST_FASTDIV_SRCS})
+# target_include_directories(test_fastdiv PRIVATE ${FLASHINFER_INCLUDE_DIR})
+# target_include_directories(test_fastdiv PRIVATE ${gtest_SOURCE_DIR}/include
+# ${gtest_SOURCE_DIR}) target_link_libraries(test_fastdiv PRIVATE gtest
+# gtest_main) endif(FLASHINFER_FASTDIV_TEST)
 
-# if(FLASHINFER_FASTDEQUANT_TEST)
-#   message(STATUS "Compile fast dequant test.")
-#   file(GLOB_RECURSE TEST_FAST_DEQUANT_SRCS
-#        ${PROJECT_SOURCE_DIR}/src/test_fast_dequant.cu)
-#   add_executable(test_fast_dequant ${TEST_FAST_DEQUANT_SRCS})
-#   target_include_directories(test_fast_dequant
-#                              PRIVATE ${FLASHINFER_INCLUDE_DIR})
-#   target_include_directories(
-#     test_fast_dequant PRIVATE ${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
-#   target_link_libraries(test_fast_dequant PRIVATE gtest gtest_main)
+# if(FLASHINFER_FASTDEQUANT_TEST) message(STATUS "Compile fast dequant test.")
+# file(GLOB_RECURSE TEST_FAST_DEQUANT_SRCS
+# ${PROJECT_SOURCE_DIR}/src/test_fast_dequant.cu)
+# add_executable(test_fast_dequant ${TEST_FAST_DEQUANT_SRCS})
+# target_include_directories(test_fast_dequant PRIVATE
+# ${FLASHINFER_INCLUDE_DIR}) target_include_directories( test_fast_dequant
+# PRIVATE ${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
+# target_link_libraries(test_fast_dequant PRIVATE gtest gtest_main)
 # endif(FLASHINFER_FASTDEQUANT_TEST)
 
-# if(FLASHINFER_DISTRIBUTED)
-#   find_package(MPI REQUIRED)
+# if(FLASHINFER_DISTRIBUTED) find_package(MPI REQUIRED)
 
-#   message(STATUS "Compile sum all-reduce kernel tests.")
-#   file(GLOB_RECURSE TEST_DIST_SUM_ALL_REDUCE_SRCS
-#        ${PROJECT_SOURCE_DIR}/src/test_sum_all_reduce.cu)
-#   add_executable(test_sum_all_reduce ${TEST_DIST_SUM_ALL_REDUCE_SRCS})
-#   target_include_directories(
-#     test_sum_all_reduce
-#     PRIVATE ${FLASHINFER_INCLUDE_DIR} 3rdparty/mscclpp/include
-#             3rdparty/spdlog/include)
-#   target_link_libraries(test_sum_all_reduce PRIVATE MPI::MPI_CXX mscclpp)
-#   target_compile_definitions(test_sum_all_reduce PRIVATE -DENABLE_MPI)
+# message(STATUS "Compile sum all-reduce kernel tests.") file(GLOB_RECURSE
+# TEST_DIST_SUM_ALL_REDUCE_SRCS
+# ${PROJECT_SOURCE_DIR}/src/test_sum_all_reduce.cu)
+# add_executable(test_sum_all_reduce ${TEST_DIST_SUM_ALL_REDUCE_SRCS})
+# target_include_directories( test_sum_all_reduce PRIVATE
+# ${FLASHINFER_INCLUDE_DIR} 3rdparty/mscclpp/include 3rdparty/spdlog/include)
+# target_link_libraries(test_sum_all_reduce PRIVATE MPI::MPI_CXX mscclpp)
+# target_compile_definitions(test_sum_all_reduce PRIVATE -DENABLE_MPI)
 
-#   message(STATUS "Compile attention allreduce kernel tests.")
-#   file(GLOB_RECURSE TEST_DIST_ATTN_ALL_REDUCE_SRCS
-#        ${PROJECT_SOURCE_DIR}/src/test_attn_all_reduce.cu)
-#   add_executable(test_attn_all_reduce ${TEST_DIST_ATTN_ALL_REDUCE_SRCS})
-#   target_include_directories(
-#     test_attn_all_reduce
-#     PRIVATE ${FLASHINFER_INCLUDE_DIR} 3rdparty/mscclpp/include
-#             3rdparty/spdlog/include)
-#   target_link_libraries(test_attn_all_reduce PRIVATE MPI::MPI_CXX mscclpp)
-#   target_compile_definitions(test_attn_all_reduce PRIVATE -DENABLE_MPI)
+# message(STATUS "Compile attention allreduce kernel tests.") file(GLOB_RECURSE
+# TEST_DIST_ATTN_ALL_REDUCE_SRCS
+# ${PROJECT_SOURCE_DIR}/src/test_attn_all_reduce.cu)
+# add_executable(test_attn_all_reduce ${TEST_DIST_ATTN_ALL_REDUCE_SRCS})
+# target_include_directories( test_attn_all_reduce PRIVATE
+# ${FLASHINFER_INCLUDE_DIR} 3rdparty/mscclpp/include 3rdparty/spdlog/include)
+# target_link_libraries(test_attn_all_reduce PRIVATE MPI::MPI_CXX mscclpp)
+# target_compile_definitions(test_attn_all_reduce PRIVATE -DENABLE_MPI)
 # endif(FLASHINFER_DISTRIBUTED)
