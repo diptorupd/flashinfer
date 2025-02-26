@@ -66,11 +66,10 @@ flashinfer_option(FLASHINFER_TVM_SOURCE_DIR
                   "The path to tvm for building tvm binding." "")
 # The following configurations can impact the binary size of the generated
 # library
-flashinfer_option(FLASHINFER_GEN_HEAD_DIMS "Head dims to enable" 64 128 256)
-flashinfer_option(FLASHINFER_GEN_POS_ENCODING_MODES "Pos encodings to enable" 0
-                  1 2)
+flashinfer_option(FLASHINFER_GEN_HEAD_DIMS "Head dims to enable" 128 256)
+flashinfer_option(FLASHINFER_GEN_POS_ENCODING_MODES "Pos encodings to enable" 0)
 flashinfer_option(FLASHINFER_GEN_USE_FP16_QK_REDUCTIONS
-                  "QK reductions to enable" "false" "true")
+                  "QK reductions to enable" "false")
 flashinfer_option(FLASHINFER_GEN_MASK_MODES "Mask modes to enable" 0 1 2)
 
 if(DEFINED FLASHINFER_CUDA_ARCHITECTURES)
@@ -156,15 +155,56 @@ add_custom_command(
   VERBATIM)
 add_custom_target(dispatch_inc DEPENDS ${DISPATCH_INC_FILE})
 
+string(
+  CONCAT WARNING_FLAGS
+         "-Wall "
+         "-Wextra "
+         "-Winit-self "
+         "-Wno-switch-bool "
+         "-Wunused-function "
+         "-Wuninitialized "
+         "-Wmissing-declarations "
+         "-Wstrict-prototypes "
+         "-Wno-unused-parameter "
+         "-fdiagnostics-color=auto ")
+
+string(
+  CONCAT SECURITY_FLAGS
+         "-fstack-protector "
+         "-fstack-protector-all "
+         "-fpic "
+         "-fPIC "
+         "-D_FORTIFY_SOURCE=2 "
+         "-Wformat "
+         "-Wformat-security "
+         "-fno-delete-null-pointer-checks "
+         "-fwrapv ")
+
+string(
+  CONCAT NVCC_FLAGS
+         "-O3 "
+         "-std=c++17 "
+         "--threads=1 "
+         "-Xfatbin=-compress-all "
+         "-use_fast_math "
+         "-DFLASHINFER_ENABLE_F16 "
+         "--expt-relaxed-constexpr ")
+string(CONCAT FLASHINFER_CXXFLAGS "${WARNING_FLAGS}" "${SECURITY_FLAGS}")
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${FLASHINFER_CXXFLAGS}")
+set(CMAKE_CXX_FLAGS_DEBUG
+    "${CMAKE_CXX_FLAGS_DEBUG} ${FLASHINFER_CXXFLAGS} -O0 -ggdb3 -DDEBUG")
+set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} ${NVCC_FLAGS}")
+
 add_library(decode_kernels STATIC ${DECODE_KERNELS_SRCS})
 target_include_directories(decode_kernels PRIVATE ${FLASHINFER_INCLUDE_DIR})
-target_compile_options(decode_kernels PRIVATE -Xcompiler=-fPIC --fatbin-options
-                                              -compress-all)
+# target_compile_options(decode_kernels PRIVATE -Xcompiler=-fPIC
+# --fatbin-options -compress-all)
 
 add_library(prefill_kernels STATIC ${PREFILL_KERNELS_SRCS})
 target_include_directories(prefill_kernels PRIVATE ${FLASHINFER_INCLUDE_DIR})
-target_compile_options(prefill_kernels PRIVATE -Xcompiler=-fPIC
-                                               --fatbin-options -compress-all)
+# target_compile_options(prefill_kernels PRIVATE -Xcompiler=-fPIC
+# --fatbin-options -compress-all)
 
 if(FLASHINFER_UNITTESTS)
   add_subdirectory(docs)
