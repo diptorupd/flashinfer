@@ -2,8 +2,20 @@ find_package(GTest REQUIRED)
 # Thread support is needed for gtest
 find_package(Threads REQUIRED)
 
+set(ALL_TEST_TARGETS)
+
+function(setup_unit_test)
+  set(options OPTIONAL IS_GTEST)
+  set(oneValueArgs KERNEL_NAME)
+  set(multiValueArgs TEST_SOURCES EXTRA_LINK_LIBS EXTRA_COMPILE_FLAGS)
+
+  cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${oneValueArgs}"
+                        "${multiValueArgs}")
+
+endfunction(setup_unit_test)
+
 function(setup_unit_test kernel_name list_of_test_sources extra_link_libs
-         compile_options)
+         test_targets_list)
   foreach(test_src IN list_of_test_sources)
     message(INFO "Building ${test_src} unit test")
     add_executable(${test_src} EXCLUDE_FROM_ALL ${test_src})
@@ -11,19 +23,35 @@ function(setup_unit_test kernel_name list_of_test_sources extra_link_libs
       ${test_src} PRIVATE ${FLASHINFER_INCLUDE_DIR} ${gtest_SOURCE_DIR}/include
                           ${gtest_SOURCE_DIR})
     add_dependencies(${test_src} dispatch_inc)
-    target_link_libraries(${test_src} PRIVATE gtest gtest_main)
     foreach(extra_link_lib IN extra_link_libs)
       target_link_libraries(${test_src} PRIVATE ${extra_link_lib})
     endforeach(extra_link_lib)
+    # gtest_discover_tests adds all discovered tests as ctest tests.
+    gtest_discover_tests(${test_src} TEST_LIST test_list_var)
+    foreach(ctest_case IN test_list_var)
+      set_tests_properties(${ctest_case} PROPERTIES LABELS "${kernel_name}")
+    endforeach(ctest_case)
 
-    target_compile_options(${test_src} PRIVATE ${compile_options})
-    gtest_discover_tests(${test_src})
+    # Add the target to the ALL_TEST_TARGETS list so that it gets built when the
+    # unittests target is invoked.
+    list(APPEND ${test_targets_list} ${test_src})
+    set(${test_targets_list}
+        ${${test_targets_list}}
+        PARENT_SCOPE)
+
     message(INFO "Built ${test_src} unit test")
+
   endforeach(test_src)
+
+  # A convenience custom target to just run the unit tests in this group
+  set(CMAKE_CTEST_COMMAND ctest --progress -V -L ${kernel_name}
+                          --output-on-failure -j 4)
+  add_custom_target(check-${kernel_name} COMMAND ${CMAKE_COMMAND}
+                                                 ${CMAKE_CTEST_COMMAND})
 
 endfunction(setup_unit_test)
 
-function(setup_distributed_unit_tests)
+function(setup_distributed_unit_tests test_targets_list)
   find_package(MPI)
   include(FetchContent)
 
@@ -46,12 +74,29 @@ function(setup_distributed_unit_tests)
   setup_unit_test(distributed DISTRIBUTED_UNIT_TESTS_SRC
                   "MPI::MPI_CXX;mscclpp;" "-DENABLE_MPI")
 
-endfunction(setup_distributed_unit_tests)
+  foreach(test_src IN DISTRIBUTED_UNIT_TESTS_SRC)
+    message(INFO "Building ${test_src} unit test")
+    add_executable(${test_src} EXCLUDE_FROM_ALL ${test_src})
+    target_include_directories(${test_src} PRIVATE ${FLASHINFER_INCLUDE_DIR})
+    add_dependencies(${test_src} dispatch_inc)
+    target_link_libraries(${test_src} PRIVATE "MPI::MPI_CXX;mscclpp;")
+    target_compile_options(${test_src} PRIVATE -DENABLE_MPI)
+    add_test(NAME ${test_src} COMMAND ${test_src})
+    set_tests_properties(${test_src} PROPERTIES LABELS distributed)
+    list(APPEND ${test_targets_list} ${test_src})
+    set(${test_targets_list}
+        ${${test_targets_list}}
+        PARENT_SCOPE)
+    message(INFO "Built ${test_src} unit test")
+  endforeach(test_src)
 
-# Emulate autotools like `make check` target to build tests
-set(CMAKE_CTEST_COMMAND ctest --progress --output-on-failure -j 4)
-add_custom_target(check COMMAND ${CMAKE_COMMAND} ${CMAKE_CTEST_COMMAND})
-enable_testing()
+  # A convenience custom target to just run the unit tests in this group
+  set(CMAKE_CTEST_COMMAND ctest --progress -V -L distributed
+                          --output-on-failure -j 4)
+  add_custom_target(check-distributed COMMAND ${CMAKE_COMMAND}
+                                              ${CMAKE_CTEST_COMMAND})
+
+endfunction(setup_distributed_unit_tests)
 
 set(DECODE_UNIT_TEST_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/test_single_decode.cu
                           ${CMAKE_CURRENT_SOURCE_DIR}/test_batch_decode.cu)
@@ -71,18 +116,37 @@ set(FASTDIV_UNIT_TEST_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/test_fastdiv.cu)
 
 set(FASTDEQUANT_UNIT_TEST_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/test_fast_dequant.cu)
 
-set(TRGT_COMPILE_OPTS "-Wno-switch-bool")
+setup_unit_test(decode DECODE_UNIT_TEST_SRCS "decode_kernels;gtest;gtest_main"
+                ALL_TEST_TARGETS)
 
-setup_unit_test(decode DECODE_UNIT_TEST_SRCS "decode_kernels;"
-                TRGT_COMPILE_OPTS)
-setup_unit_test(prefill PREFILL_UNIT_TEST_SRCS "prefill_kernels;"
-                TRGT_COMPILE_OPTS)
-setup_unit_test(page PAGE_UNIT_TEST_SRCS "" TRGT_COMPILE_OPTS)
-setup_unit_test(cascade CASCADE_UNIT_TEST_SRCS "decode_kernels;prefill_kernels"
-                TRGT_COMPILE_OPTS)
-setup_unit_test(sampling SAMPLING_UNIT_TEST_SRCS "" TRGT_COMPILE_OPTS)
-setup_unit_test(norm NORM_UNIT_TEST_SRCS "" TRGT_COMPILE_OPTS)
-setup_unit_test(fastdiv FASTDIV_UNIT_TEST_SRCS "" TRGT_COMPILE_OPTS)
-setup_unit_test(fast_dequant FASTDEQUANT_UNIT_TEST_SRCS "" TRGT_COMPILE_OPTS)
+setup_unit_test(prefill PREFILL_UNIT_TEST_SRCS
+                "prefill_kernels;gtest;gtest_main" ALL_TEST_TARGETS)
 
-setup_distributed_unit_tests()
+setup_unit_test(page PAGE_UNIT_TEST_SRCS "" ALL_TEST_TARGETS)
+
+setup_unit_test(
+  cascade CASCADE_UNIT_TEST_SRCS
+  "decode_kernels;prefill_kernels;gtest;gtest_main" ALL_TEST_TARGETS)
+
+setup_unit_test(sampling SAMPLING_UNIT_TEST_SRCS "gtest;gtest_main"
+                ALL_TEST_TARGETS)
+
+setup_unit_test(norm NORM_UNIT_TEST_SRCS "gtest;gtest_main" ALL_TEST_TARGETS)
+
+setup_unit_test(fastdiv FASTDIV_UNIT_TEST_SRCS "gtest;gtest_main"
+                ALL_TEST_TARGETS)
+
+setup_unit_test(fast_dequant FASTDEQUANT_UNIT_TEST_SRCS "gtest;gtest_main"
+                ALL_TEST_TARGETS)
+
+setup_distributed_unit_tests(ALL_TEST_TARGETS)
+
+# A top-level target to build all unit tests
+add_custom_target(unittests)
+add_dependencies(unittests ${ALL_TEST_TARGETS})
+# Emulate autotools like `make check` target to run all ctests
+set(CMAKE_CTEST_COMMAND ctest --progress --output-on-failure -j 4)
+add_custom_target(check-all COMMAND ${CMAKE_COMMAND} ${CMAKE_CTEST_COMMAND})
+add_dependencies(check-all unittests)
+
+enable_testing()
