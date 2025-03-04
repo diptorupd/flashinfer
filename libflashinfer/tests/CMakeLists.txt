@@ -1,8 +1,19 @@
-find_package(GTest REQUIRED)
+include(FetchContent)
+
+FetchContent_Declare(
+  googletest
+  GIT_REPOSITORY https://github.com/google/googletest.git
+  GIT_TAG        6910c9d9165801d8827d628cb72eb7ea9dd538c5 # release-1.16.0
+  FIND_PACKAGE_ARGS NAMES GTest
+)
+FetchContent_MakeAvailable(googletest)
+
+# GoogleTest has to be included so that gtest_discover_tests works
+include(GoogleTest)
 # Thread support is needed for gtest
 find_package(Threads REQUIRED)
 
-set(ALL_TEST_TARGETS)
+set(ALL_TEST_TARGETS "")
 
 function(setup_unit_test)
   set(options OPTIONAL IS_GTEST)
@@ -11,49 +22,36 @@ function(setup_unit_test)
 
   cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${oneValueArgs}"
                         "${multiValueArgs}")
-
-  foreach(test_src IN TEST_SOURCES)
-    message(INFO "Building ${test_src} unit test")
+  foreach(test_src IN LISTS arg_TEST_SOURCES)
+    message(STATUS "Building ${test_src} unit test")
     add_executable(${test_src} EXCLUDE_FROM_ALL ${test_src})
     target_include_directories(${test_src} PRIVATE ${FLASHINFER_INCLUDE_DIR})
     add_dependencies(${test_src} dispatch_inc)
-    foreach(extra_link_lib IN EXTRA_LINK_LIBS)
-      target_link_libraries(${test_src} PRIVATE ${extra_link_lib})
+    foreach(extra_link_lib IN LISTS arg_EXTRA_LINK_LIBS)
+       target_link_libraries(${test_src} PRIVATE ${extra_link_lib})
     endforeach(extra_link_lib)
 
-    foreach(copt IN EXTRA_COMPILE_FLAGS)
-      target_compile_options(${test_src} PRIVATE ${copt})
+    foreach(copt IN LISTS arg_EXTRA_COMPILE_FLAGS)
+       target_compile_options(${test_src} PRIVATE ${copt})
     endforeach(copt)
 
-    if(IS_GTEST)
+    if(${arg_IS_GTEST})
       target_include_directories(${test_src} PRIVATE ${gtest_SOURCE_DIR}/include
                                                      ${gtest_SOURCE_DIR})
-      # gtest_discover_tests adds all discovered tests as ctest tests.
-      gtest_discover_tests(${test_src} TEST_LIST test_list_var)
-      foreach(ctest_case IN test_list_var)
-        set_tests_properties(${ctest_case} PROPERTIES LABELS "${KERNEL_NAME}")
-      endforeach(ctest_case)
       target_link_libraries(${test_src} PRIVATE gtest gtest_main)
-    elseif(IS_GTEST)
+    elseif(${arg_IS_GTEST})
       add_test(NAME ${test_src} COMMAND ${test_src})
-      set_tests_properties(${test_src} PROPERTIES LABELS "${KERNEL_NAME}")
-    endif(IS_GTEST)
+    endif(${arg_IS_GTEST})
 
     # Add the target to the ALL_TEST_TARGETS_LIST list so that it gets built
     # when the unittests target is invoked.
-    list(APPEND ${test_targets_list} ${test_src})
-    set(${test_targets_list}
-        ${${ALL_TEST_TARGETS_LIST}}
+    list(APPEND ${arg_ALL_TEST_TARGETS_LIST} ${test_src})
+    set(${arg_ALL_TEST_TARGETS_LIST}
+        ${${arg_ALL_TEST_TARGETS_LIST}}
         PARENT_SCOPE)
-    message(INFO "Built ${test_src} unit test")
+    message(STATUS "Built ${test_src} unit test")
 
   endforeach(test_src)
-
-  # A convenience custom target to just run the unit tests in this group
-  set(CMAKE_CTEST_COMMAND ctest --progress -V -L ${KERNEL_NAME}
-                          --output-on-failure -j 4)
-  add_custom_target(check-${KERNEL_NAME} COMMAND ${CMAKE_COMMAND}
-                                                 ${CMAKE_CTEST_COMMAND})
 
 endfunction(setup_unit_test)
 
@@ -86,7 +84,6 @@ endfunction(setup_unit_test)
 
 function(setup_distributed_unit_tests test_targets_list)
   find_package(MPI)
-  include(FetchContent)
 
   if(NOT PackageMPI_FOUND)
     message(WARN
@@ -106,18 +103,16 @@ function(setup_distributed_unit_tests test_targets_list)
 
   setup_unit_test(distributed DISTRIBUTED_UNIT_TESTS_SRC
                   "MPI::MPI_CXX;mscclpp;" "-DENABLE_MPI")
-
+  # cmake-format: off
   setup_unit_test(
-    KERNEL_NAME
-    distributed
-    TEST_SOURCES
-    DISTRIBUTED_UNIT_TESTS_SRC
-    EXTRA_LINK_LIBS
-    "MPI::MPI_CXX;mscclpp;"
-    ALL_TEST_TARGETS_LIST
-    ALL_TEST_TARGETS
-    IS_GTEST
-    ON)
+    KERNEL_NAME distributed
+    TEST_SOURCES DISTRIBUTED_UNIT_TESTS_SRC
+    EXTRA_LINK_LIBS "MPI::MPI_CXX;mscclpp;"
+    ALL_TEST_TARGETS_LIST ALL_TEST_TARGETS
+    IS_GTEST ON
+  )
+  # cmake-format: on
+
   # foreach(test_src IN DISTRIBUTED_UNIT_TESTS_SRC) message(INFO "Building
   # ${test_src} unit test") add_executable(${test_src} EXCLUDE_FROM_ALL
   # ${test_src}) target_include_directories(${test_src} PRIVATE
@@ -136,108 +131,90 @@ function(setup_distributed_unit_tests test_targets_list)
 
 endfunction(setup_distributed_unit_tests)
 
-set(DECODE_UNIT_TEST_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/test_single_decode.cu
-                          ${CMAKE_CURRENT_SOURCE_DIR}/test_batch_decode.cu)
-set(PREFILL_UNIT_TEST_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/test_single_prefill.cu
-                           ${CMAKE_CURRENT_SOURCE_DIR}/test_batch_prefill.cu)
-set(PAGE_UNIT_TEST_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/test_page.cu)
-set(CASCADE_UNIT_TEST_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/test_cascade.cu)
-set(SAMPLING_UNIT_TEST_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/test_sampling.cu)
-set(NORM_UNIT_TEST_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/test_norm.cu)
-set(FASTDIV_UNIT_TEST_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/test_fastdiv.cu)
-set(FASTDEQUANT_UNIT_TEST_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/test_fast_dequant.cu)
+set(DECODE_UNIT_TEST_SRCS "test_single_decode.cu"
+                          "test_batch_decode.cu")
+set(PREFILL_UNIT_TEST_SRCS "test_single_prefill.cu"
+                           "test_batch_prefill.cu")
+set(PAGE_UNIT_TEST_SRCS "test_page.cu")
+set(CASCADE_UNIT_TEST_SRCS "test_cascade.cu")
+set(SAMPLING_UNIT_TEST_SRCS "test_sampling.cu")
+set(NORM_UNIT_TEST_SRCS "test_norm.cu")
+set(FASTDIV_UNIT_TEST_SRCS "test_fastdiv.cu")
+set(FASTDEQUANT_UNIT_TEST_SRCS "test_fast_dequant.cu")
 
 set(options OPTIONAL IS_GTEST)
 set(oneValueArgs KERNEL_NAME)
 set(multiValueArgs TEST_SOURCES EXTRA_LINK_LIBS EXTRA_COMPILE_FLAGS)
 
+# cmake-format: off
 setup_unit_test(
-  KERNEL_NAME
-  decode
-  TEST_SOURCES
-  DECODE_UNIT_TEST_SRCS
-  EXTRA_LINK_LIBS
-  "decode_kernels"
-  ALL_TEST_TARGETS_LIST
-  ALL_TEST_TARGETS
-  IS_GTEST
-  ON)
+  KERNEL_NAME decode
+  TEST_SOURCES ${DECODE_UNIT_TEST_SRCS}
+  EXTRA_LINK_LIBS "decode_kernels"
+  ALL_TEST_TARGETS_LIST ALL_TEST_TARGETS
+  IS_GTEST ON
+)
 setup_unit_test(
-  KERNEL_NAME
-  prefill
-  TEST_SOURCES
-  PREFILL_UNIT_TEST_SRCS
-  EXTRA_LINK_LIBS
-  "prefill_kernels"
-  ALL_TEST_TARGETS_LIST
-  ALL_TEST_TARGETS
-  IS_GTEST
-  ON)
+  KERNEL_NAME prefill
+  TEST_SOURCES ${PREFILL_UNIT_TEST_SRCS}
+  EXTRA_LINK_LIBS "prefill_kernels"
+  ALL_TEST_TARGETS_LIST ALL_TEST_TARGETS
+  IS_GTEST ON
+)
 setup_unit_test(
-  KERNEL_NAME
-  page
-  TEST_SOURCES
-  PAGE_UNIT_TEST_SRCS
-  ALL_TEST_TARGETS_LIST
-  ALL_TEST_TARGETS
-  IS_GTEST
-  ON)
+  KERNEL_NAME page
+  TEST_SOURCES ${PAGE_UNIT_TEST_SRCS}
+  ALL_TEST_TARGETS_LIST ALL_TEST_TARGETS
+  IS_GTEST ON
+)
 setup_unit_test(
-  KERNEL_NAME
-  cascade
-  TEST_SOURCES
-  CASCADE_UNIT_TEST_SRCS
-  EXTRA_LINK_LIBS
-  "decode_kernels;prefill_kernels"
-  ALL_TEST_TARGETS_LIST
-  ALL_TEST_TARGETS
-  IS_GTEST
-  ON)
+  KERNEL_NAME cascade
+  TEST_SOURCES ${CASCADE_UNIT_TEST_SRCS}
+  EXTRA_LINK_LIBS "decode_kernels;prefill_kernels"
+  ALL_TEST_TARGETS_LIST ALL_TEST_TARGETS
+  IS_GTEST ON
+)
 setup_unit_test(
-  KERNEL_NAME
-  sampling
-  TEST_SOURCES
-  SAMPLING_UNIT_TEST_SRCS
-  ALL_TEST_TARGETS_LIST
-  ALL_TEST_TARGETS
-  IS_GTEST
-  ON)
+  KERNEL_NAME sampling
+  TEST_SOURCES ${SAMPLING_UNIT_TEST_SRCS}
+  ALL_TEST_TARGETS_LIST ALL_TEST_TARGETS
+  IS_GTEST ON
+)
 setup_unit_test(
-  KERNEL_NAME
-  norm
-  TEST_SOURCES
-  NORM_UNIT_TEST_SRCS
-  ALL_TEST_TARGETS_LIST
-  ALL_TEST_TARGETS
-  IS_GTEST
-  ON)
+  KERNEL_NAME norm
+  TEST_SOURCES ${NORM_UNIT_TEST_SRCS}
+  ALL_TEST_TARGETS_LIST ALL_TEST_TARGETS
+  IS_GTEST ON
+)
 setup_unit_test(
-  KERNEL_NAME
-  fastdiv
-  TEST_SOURCES
-  FASTDIV_UNIT_TEST_SRCS
-  ALL_TEST_TARGETS_LIST
-  ALL_TEST_TARGETS
-  IS_GTEST
-  ON)
+  KERNEL_NAME fastdiv
+  TEST_SOURCES ${FASTDIV_UNIT_TEST_SRCS}
+  ALL_TEST_TARGETS_LIST ALL_TEST_TARGETS
+  IS_GTEST ON
+)
 setup_unit_test(
-  KERNEL_NAME
-  fast_dequant
-  TEST_SOURCES
-  FASTDEQUANT_UNIT_TEST_SRCS
-  ALL_TEST_TARGETS_LIST
-  ALL_TEST_TARGETS
-  IS_GTEST
-  ON)
-
-setup_distributed_unit_tests(ALL_TEST_TARGETS)
+  KERNEL_NAME fast_dequant
+  TEST_SOURCES ${FASTDEQUANT_UNIT_TEST_SRCS}
+  ALL_TEST_TARGETS_LIST ALL_TEST_TARGETS
+  IS_GTEST ON
+)
+# # cmake-format: on
+# setup_distributed_unit_tests(ALL_TEST_TARGETS)
 
 # A top-level target to build all unit tests
 add_custom_target(unittests)
+
+message(STATUS "All unit test targets: ${ALL_TEST_TARGETS}")
+
+# gtest_discover_tests adds all discovered tests as ctest tests.
+# foreach(test_trgt IN ${ALL_TEST_TARGETS})
+#   gtest_discover_tests(${test_trgt})
+# endforeach(test_trgt)
+
 add_dependencies(unittests ${ALL_TEST_TARGETS})
 # Emulate autotools like `make check` target to run all ctests
 set(CMAKE_CTEST_COMMAND ctest --progress --output-on-failure -j 4)
-add_custom_target(check-all COMMAND ${CMAKE_COMMAND} ${CMAKE_CTEST_COMMAND})
-add_dependencies(check-all unittests)
+add_custom_target(check COMMAND ${CMAKE_COMMAND} ${CMAKE_CTEST_COMMAND})
+add_dependencies(check unittests)
 
 enable_testing()
