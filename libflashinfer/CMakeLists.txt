@@ -164,7 +164,6 @@ string(
          "-Wunused-function "
          "-Wuninitialized "
          "-Wmissing-declarations "
-         "-Wstrict-prototypes "
          "-Wno-unused-parameter "
          "-fdiagnostics-color=auto ")
 
@@ -207,7 +206,7 @@ target_include_directories(prefill_kernels PRIVATE ${FLASHINFER_INCLUDE_DIR})
 # --fatbin-options -compress-all)
 
 if(FLASHINFER_UNITTESTS)
-  add_subdirectory(docs)
+  add_subdirectory(tests)
 endif(FLASHINFER_UNITTESTS)
 
 if(FLASHINFER_DECODE)
