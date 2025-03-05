@@ -10,9 +10,6 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
 
 include(cmake/utils/Utils.cmake)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CUDA_STANDARD 17)
-
 if(EXISTS ${CMAKE_BINARY_DIR}/config.cmake)
   include(${CMAKE_BINARY_DIR}/config.cmake)
 else()
@@ -124,30 +121,41 @@ message(STATUS "FLASHINFER_POS_ENCODING_MODES=${POS_ENCODING_MODES}")
 message(STATUS "FLASHINFER_USE_FP16_QK_REDUCTIONS=${USE_FP16_QK_REDUCTIONS}")
 message(STATUS "FLASHINFER_MASK_MODES=${MASK_MODES}")
 
-file(MAKE_DIRECTORY ${PROJECT_SOURCE_DIR}/src/generated)
+set(GENERATED_SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/src/generated)
+cmake_path(GET GENERATED_SOURCE_DIR PARENT_PATH GENERATED_SOURCE_DIR_ROOT)
+file(MAKE_DIRECTORY ${GENERATED_SOURCE_DIR})
 
 set(AOT_GENERATE_COMMAND
     ${Python3_EXECUTABLE} -m aot_build_utils.generate --path
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/generated --head_dims ${HEAD_DIMS}
+    ${GENERATED_SOURCE_DIR} --head_dims ${HEAD_DIMS}
     --pos_encoding_modes ${POS_ENCODING_MODES} --use_fp16_qk_reductions
     ${USE_FP16_QK_REDUCTIONS} --mask_modes ${MASK_MODES} --enable_f16
     ${FLASHINFER_ENABLE_F16} --enable_bf16 ${FLASHINFER_ENABLE_BF16}
     --enable_fp8_e4m3 ${FLASHINFER_ENABLE_FP8_E4M3} --enable_fp8_e5m2
     ${FLASHINFER_ENABLE_FP8_E5M2})
 
+set(AOT_GENERATE_DISPATCH_INC_COMMAND
+    ${Python3_EXECUTABLE} -m aot_build_utils.generate_dispatch_inc
+    --path "${GENERATED_SOURCE_DIR}/dispatch.inc"
+    --head_dims ${HEAD_DIMS}
+    --head_dims_sm90 "64,64" #FIXME
+    --pos_encoding_modes ${POS_ENCODING_MODES}
+    --use_fp16_qk_reductions ${USE_FP16_QK_REDUCTIONS}
+    --mask_modes ${MASK_MODES})
+
 execute_process(COMMAND ${AOT_GENERATE_COMMAND}
                 WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
+execute_process(COMMAND ${AOT_GENERATE_DISPATCH_INC_COMMAND}
+                WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
 
-file(GLOB_RECURSE DECODE_KERNELS_SRCS
-     ${CMAKE_CURRENT_SOURCE_DIR}/src/generated/*decode_head*.cu)
-file(GLOB_RECURSE PREFILL_KERNELS_SRCS
-     ${CMAKE_CURRENT_SOURCE_DIR}/src/generated/*prefill_head*.cu)
-file(GLOB_RECURSE DISPATCH_INC_FILE
-     ${CMAKE_CURRENT_SOURCE_DIR}/src/generated/dispatch.inc)
+file(GLOB_RECURSE DECODE_KERNELS_SRCS ${GENERATED_SOURCE_DIR}/*decode_head*.cu)
+file(GLOB_RECURSE PREFILL_KERNELS_SRCS ${GENERATED_SOURCE_DIR}/*prefill_head*.cu)
+file(GLOB_RECURSE DISPATCH_INC_FILE ${GENERATED_SOURCE_DIR}/dispatch.inc)
 
 add_custom_command(
   OUTPUT ${DECODE_KERNELS_SRCS} ${PREFILL_KERNELS_SRCS} ${DISPATCH_INC_FILE}
   COMMAND ${AOT_GENERATE_COMMAND}
+  COMMAND ${AOT_GENERATE_DISPATCH_INC_COMMAND}
   DEPENDS ${FLASHINFER_GENERATORS}
   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
   COMMENT "Generating kernel sources"

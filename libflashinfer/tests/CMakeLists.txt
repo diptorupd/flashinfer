@@ -27,6 +27,7 @@ function(setup_unit_test)
     add_executable(${test_src} EXCLUDE_FROM_ALL ${test_src})
     target_include_directories(${test_src} PRIVATE ${FLASHINFER_INCLUDE_DIR})
     target_include_directories(${test_src} PRIVATE ${FLASHINFER_UTILS_INCLUDE_DIR})
+    target_include_directories(${test_src} PRIVATE ${GENERATED_SOURCE_DIR_ROOT}) #FIXME
     add_dependencies(${test_src} dispatch_inc)
     foreach(extra_link_lib IN LISTS arg_EXTRA_LINK_LIBS)
        target_link_libraries(${test_src} PRIVATE ${extra_link_lib})
