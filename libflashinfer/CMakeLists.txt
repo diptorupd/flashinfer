@@ -26,23 +26,10 @@ flashinfer_option(FLASHINFER_ENABLE_F16
                   "Whether to compile f16 kernels or not." ON)
 flashinfer_option(FLASHINFER_ENABLE_BF16
                   "Whether to compile bf16 kernels or not." ON)
-# flashinfer_option(FLASHINFER_PREFILL "Whether to compile prefill kernel
-# tests/benchmarks or not." OFF) flashinfer_option(FLASHINFER_DECODE "Whether to
-# compile decode kernel tests/benchmarks or not."  OFF)
-# flashinfer_option(FLASHINFER_PAGE "Whether to compile page kernel
-# tests/benchmarks or not." OFF) flashinfer_option(FLASHINFER_CASCADE "Whether
-# to compile cascade kernel tests/benchmarks or not." OFF)
-# flashinfer_option(FLASHINFER_SAMPLING "Whether to compile sampling kernel
-# tests/benchmarks or not." OFF) flashinfer_option(FLASHINFER_NORM "Whether to
-# compile normalization kernel tests/benchmarks or not." OFF)
-# flashinfer_option(FLASHINFER_DISTRIBUTED "Whether to compile distributed
-# kernel tests/benchmarks or not." OFF) Option to build the Gtests for
-# libflashinfer CUDA kernels
-flashinfer_option(FLASHINFER_UNITTESTS "Build libflashinfer C++ google tests"
+flashinfer_option(FLASHINFER_UNITTESTS "Build libflashinfer unit tests"
                   OFF)
-# flashinfer_option(FLASHINFER_FASTDIV_TEST "Whether to compile fastdiv kernel
-# tests or not." OFF) flashinfer_option(FLASHINFER_FASTDEQAUNT_TEST "Whether to
-# compile fast dequant kernel tests or not." OFF)
+flashinfer_option(FLASHINFER_DISTRIBUTED_UNITTESTS "Build libflashinfer distributed unit tests"
+                  OFF)
 flashinfer_option(FLASHINFER_TVM_BINDING
                   "Whether to compile tvm binding or not." OFF)
 flashinfer_option(FLASHINFER_TVM_SOURCE_DIR
@@ -190,13 +177,9 @@ set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} ${NVCC_FLAGS}")
 
 add_library(decode_kernels STATIC ${DECODE_KERNELS_SRCS})
 target_include_directories(decode_kernels PRIVATE ${FLASHINFER_INCLUDE_DIR})
-# target_compile_options(decode_kernels PRIVATE -Xcompiler=-fPIC
-# --fatbin-options -compress-all)
 
 add_library(prefill_kernels STATIC ${PREFILL_KERNELS_SRCS})
 target_include_directories(prefill_kernels PRIVATE ${FLASHINFER_INCLUDE_DIR})
-# target_compile_options(prefill_kernels PRIVATE -Xcompiler=-fPIC
-# --fatbin-options -compress-all)
 
 if(FLASHINFER_UNITTESTS)
   add_subdirectory(tests)
