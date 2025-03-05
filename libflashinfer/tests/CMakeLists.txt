@@ -24,10 +24,12 @@ function(setup_unit_test)
                         "${multiValueArgs}")
   foreach(test_src IN LISTS arg_TEST_SOURCES)
     message(STATUS "Building ${test_src} unit test")
-    add_executable(${test_src} EXCLUDE_FROM_ALL ${test_src})
+
+    get_filename_component(filename_no_ext "${test_src}" TEST_EXEC_NAME)
+    add_executable(${TEST_EXEC_NAME} EXCLUDE_FROM_ALL ${test_src})
     target_include_directories(${test_src} PRIVATE ${FLASHINFER_INCLUDE_DIR})
     target_include_directories(${test_src} PRIVATE ${FLASHINFER_UTILS_INCLUDE_DIR})
-    target_include_directories(${test_src} PRIVATE ${GENERATED_SOURCE_DIR_ROOT}) #FIXME
+    target_include_directories(${test_src} PRIVATE ${GENERATED_SOURCE_DIR_ROOT})
     add_dependencies(${test_src} dispatch_inc)
     foreach(extra_link_lib IN LISTS arg_EXTRA_LINK_LIBS)
        target_link_libraries(${test_src} PRIVATE ${extra_link_lib})
@@ -56,33 +58,6 @@ function(setup_unit_test)
   endforeach(test_src)
 
 endfunction(setup_unit_test)
-
-# function(setup_unit_test kernel_name list_of_test_sources extra_link_libs
-# test_targets_list) foreach(test_src IN list_of_test_sources) message(INFO
-# "Building ${test_src} unit test") add_executable(${test_src} EXCLUDE_FROM_ALL
-# ${test_src}) target_include_directories( ${test_src} PRIVATE
-# ${FLASHINFER_INCLUDE_DIR} ${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
-# add_dependencies(${test_src} dispatch_inc) foreach(extra_link_lib IN
-# extra_link_libs) target_link_libraries(${test_src} PRIVATE ${extra_link_lib})
-# endforeach(extra_link_lib) # gtest_discover_tests adds all discovered tests as
-# ctest tests. gtest_discover_tests(${test_src} TEST_LIST test_list_var)
-# foreach(ctest_case IN test_list_var) set_tests_properties(${ctest_case}
-# PROPERTIES LABELS "${kernel_name}") endforeach(ctest_case)
-
-# # Add the target to the ALL_TEST_TARGETS list so that it gets built when the #
-# unittests target is invoked. list(APPEND ${test_targets_list} ${test_src})
-# set(${test_targets_list} ${${test_targets_list}} PARENT_SCOPE)
-
-# message(INFO "Built ${test_src} unit test")
-
-# endforeach(test_src)
-
-# # A convenience custom target to just run the unit tests in this group
-# set(CMAKE_CTEST_COMMAND ctest --progress -V -L ${kernel_name}
-# --output-on-failure -j 4) add_custom_target(check-${kernel_name} COMMAND
-# ${CMAKE_COMMAND} ${CMAKE_CTEST_COMMAND})
-
-# endfunction(setup_unit_test)
 
 function(setup_distributed_unit_tests test_targets_list)
   find_package(MPI)
@@ -114,23 +89,6 @@ function(setup_distributed_unit_tests test_targets_list)
     IS_GTEST ON
   )
   # cmake-format: on
-
-  # foreach(test_src IN DISTRIBUTED_UNIT_TESTS_SRC) message(INFO "Building
-  # ${test_src} unit test") add_executable(${test_src} EXCLUDE_FROM_ALL
-  # ${test_src}) target_include_directories(${test_src} PRIVATE
-  # ${FLASHINFER_INCLUDE_DIR}) add_dependencies(${test_src} dispatch_inc)
-  # target_link_libraries(${test_src} PRIVATE "MPI::MPI_CXX;mscclpp;")
-  # target_compile_options(${test_src} PRIVATE -DENABLE_MPI) add_test(NAME
-  # ${test_src} COMMAND ${test_src}) set_tests_properties(${test_src} PROPERTIES
-  # LABELS distributed) list(APPEND ${test_targets_list} ${test_src})
-  # set(${test_targets_list} ${${test_targets_list}} PARENT_SCOPE) message(INFO
-  # "Built ${test_src} unit test") endforeach(test_src)
-
-  # # A convenience custom target to just run the unit tests in this group
-  # set(CMAKE_CTEST_COMMAND ctest --progress -V -L distributed
-  # --output-on-failure -j 4) add_custom_target(check-distributed COMMAND
-  # ${CMAKE_COMMAND} ${CMAKE_CTEST_COMMAND})
-
 endfunction(setup_distributed_unit_tests)
 
 set(DECODE_UNIT_TEST_SRCS "test_single_decode.cu"
