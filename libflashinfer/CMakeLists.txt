@@ -4,20 +4,6 @@ project(
   LANGUAGES CUDA CXX
   DESCRIPTION "C++ Kernel Library for LLM Serving")
 
-# Load CMake modules to search for Thrust
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
-                      "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
-
-include(cmake/utils/Utils.cmake)
-
-if(EXISTS ${CMAKE_BINARY_DIR}/config.cmake)
-  include(${CMAKE_BINARY_DIR}/config.cmake)
-else()
-  if(EXISTS ${CMAKE_SOURCE_DIR}/config.cmake)
-    include(${CMAKE_SOURCE_DIR}/config.cmake)
-  endif()
-endif()
-
 find_package(Python3 REQUIRED)
 if(NOT Python3_FOUND)
   message(
