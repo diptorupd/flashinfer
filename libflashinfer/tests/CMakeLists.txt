@@ -3,9 +3,8 @@ include(FetchContent)
 FetchContent_Declare(
   googletest
   GIT_REPOSITORY https://github.com/google/googletest.git
-  GIT_TAG        6910c9d9165801d8827d628cb72eb7ea9dd538c5 # release-1.16.0
-  FIND_PACKAGE_ARGS NAMES GTest
-)
+  GIT_TAG 6910c9d9165801d8827d628cb72eb7ea9dd538c5 # release-1.16.0
+  FIND_PACKAGE_ARGS NAMES GTest)
 FetchContent_MakeAvailable(googletest)
 
 # GoogleTest has to be included so that gtest_discover_tests works
@@ -28,21 +27,25 @@ function(setup_unit_test)
     get_filename_component(filename_no_ext "${test_src}" TEST_EXEC_NAME)
     set(TEST_TARGET_NAME ${TEST_EXEC_NAME})
     add_executable(${TEST_TARGET_NAME} EXCLUDE_FROM_ALL ${test_src})
-    target_include_directories(${TEST_TARGET_NAME} PRIVATE ${FLASHINFER_INCLUDE_DIR})
-    target_include_directories(${TEST_TARGET_NAME} PRIVATE ${FLASHINFER_UTILS_INCLUDE_DIR})
-    target_include_directories(${TEST_TARGET_NAME} PRIVATE ${GENERATED_SOURCE_DIR_ROOT})
+    target_include_directories(${TEST_TARGET_NAME}
+                               PRIVATE ${FLASHINFER_INCLUDE_DIR})
+    target_include_directories(${TEST_TARGET_NAME}
+                               PRIVATE ${FLASHINFER_UTILS_INCLUDE_DIR})
+    target_include_directories(${TEST_TARGET_NAME}
+                               PRIVATE ${GENERATED_SOURCE_DIR_ROOT})
     add_dependencies(${TEST_TARGET_NAME} dispatch_inc)
     foreach(extra_link_lib IN LISTS arg_EXTRA_LINK_LIBS)
-       target_link_libraries(${TEST_TARGET_NAME} PRIVATE ${extra_link_lib})
+      target_link_libraries(${TEST_TARGET_NAME} PRIVATE ${extra_link_lib})
     endforeach(extra_link_lib)
 
     foreach(copt IN LISTS arg_EXTRA_COMPILE_FLAGS)
-       target_compile_options(${TEST_TARGET_NAME} PRIVATE ${copt})
+      target_compile_options(${TEST_TARGET_NAME} PRIVATE ${copt})
     endforeach(copt)
 
     if(${arg_IS_GTEST})
-      target_include_directories(${TEST_TARGET_NAME} PRIVATE ${gtest_SOURCE_DIR}/include
-                                                     ${gtest_SOURCE_DIR})
+      target_include_directories(
+        ${TEST_TARGET_NAME} PRIVATE ${gtest_SOURCE_DIR}/include
+                                    ${gtest_SOURCE_DIR})
       target_link_libraries(${TEST_TARGET_NAME} PRIVATE gtest gtest_main)
     elseif(${arg_IS_GTEST})
       add_test(NAME ${TEST_TARGET_NAME} COMMAND ${TEST_TARGET_NAME})
@@ -92,10 +95,8 @@ function(setup_distributed_unit_tests test_targets_list)
   # cmake-format: on
 endfunction(setup_distributed_unit_tests)
 
-set(DECODE_UNIT_TEST_SRCS "test_single_decode.cu"
-                          "test_batch_decode.cu")
-set(PREFILL_UNIT_TEST_SRCS "test_single_prefill.cu"
-                           "test_batch_prefill.cu")
+set(DECODE_UNIT_TEST_SRCS "test_single_decode.cu" "test_batch_decode.cu")
+set(PREFILL_UNIT_TEST_SRCS "test_single_prefill.cu" "test_batch_prefill.cu")
 set(PAGE_UNIT_TEST_SRCS "test_page.cu")
 set(CASCADE_UNIT_TEST_SRCS "test_cascade.cu")
 set(SAMPLING_UNIT_TEST_SRCS "test_sampling.cu")
@@ -159,7 +160,7 @@ setup_unit_test(
   ALL_TEST_TARGETS_LIST ALL_TEST_TARGETS
   IS_GTEST ON
 )
-# # cmake-format: on
+# cmake-format: on
 
 if(FLASHINFER_DISTRIBUTED_UNITTESTS)
   setup_distributed_unit_tests(ALL_TEST_TARGETS)
@@ -171,8 +172,7 @@ add_custom_target(unittests)
 message(STATUS "All unit test targets: ${ALL_TEST_TARGETS}")
 
 # gtest_discover_tests adds all discovered tests as ctest tests.
-# foreach(test_trgt IN ${ALL_TEST_TARGETS})
-#   gtest_discover_tests(${test_trgt})
+# foreach(test_trgt IN ${ALL_TEST_TARGETS}) gtest_discover_tests(${test_trgt})
 # endforeach(test_trgt)
 
 add_dependencies(unittests ${ALL_TEST_TARGETS})
