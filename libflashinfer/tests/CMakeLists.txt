@@ -26,30 +26,31 @@ function(setup_unit_test)
     message(STATUS "Building ${test_src} unit test")
 
     get_filename_component(filename_no_ext "${test_src}" TEST_EXEC_NAME)
-    add_executable(${TEST_EXEC_NAME} EXCLUDE_FROM_ALL ${test_src})
-    target_include_directories(${test_src} PRIVATE ${FLASHINFER_INCLUDE_DIR})
-    target_include_directories(${test_src} PRIVATE ${FLASHINFER_UTILS_INCLUDE_DIR})
-    target_include_directories(${test_src} PRIVATE ${GENERATED_SOURCE_DIR_ROOT})
-    add_dependencies(${test_src} dispatch_inc)
+    set(TEST_TARGET_NAME ${TEST_EXEC_NAME})
+    add_executable(${TEST_TARGET_NAME} EXCLUDE_FROM_ALL ${test_src})
+    target_include_directories(${TEST_TARGET_NAME} PRIVATE ${FLASHINFER_INCLUDE_DIR})
+    target_include_directories(${TEST_TARGET_NAME} PRIVATE ${FLASHINFER_UTILS_INCLUDE_DIR})
+    target_include_directories(${TEST_TARGET_NAME} PRIVATE ${GENERATED_SOURCE_DIR_ROOT})
+    add_dependencies(${TEST_TARGET_NAME} dispatch_inc)
     foreach(extra_link_lib IN LISTS arg_EXTRA_LINK_LIBS)
-       target_link_libraries(${test_src} PRIVATE ${extra_link_lib})
+       target_link_libraries(${TEST_TARGET_NAME} PRIVATE ${extra_link_lib})
     endforeach(extra_link_lib)
 
     foreach(copt IN LISTS arg_EXTRA_COMPILE_FLAGS)
-       target_compile_options(${test_src} PRIVATE ${copt})
+       target_compile_options(${TEST_TARGET_NAME} PRIVATE ${copt})
     endforeach(copt)
 
     if(${arg_IS_GTEST})
-      target_include_directories(${test_src} PRIVATE ${gtest_SOURCE_DIR}/include
+      target_include_directories(${TEST_TARGET_NAME} PRIVATE ${gtest_SOURCE_DIR}/include
                                                      ${gtest_SOURCE_DIR})
-      target_link_libraries(${test_src} PRIVATE gtest gtest_main)
+      target_link_libraries(${TEST_TARGET_NAME} PRIVATE gtest gtest_main)
     elseif(${arg_IS_GTEST})
-      add_test(NAME ${test_src} COMMAND ${test_src})
+      add_test(NAME ${TEST_TARGET_NAME} COMMAND ${TEST_TARGET_NAME})
     endif(${arg_IS_GTEST})
 
     # Add the target to the ALL_TEST_TARGETS_LIST list so that it gets built
     # when the unittests target is invoked.
-    list(APPEND ${arg_ALL_TEST_TARGETS_LIST} ${test_src})
+    list(APPEND ${arg_ALL_TEST_TARGETS_LIST} ${TEST_TARGET_NAME})
     set(${arg_ALL_TEST_TARGETS_LIST}
         ${${arg_ALL_TEST_TARGETS_LIST}}
         PARENT_SCOPE)
@@ -159,7 +160,10 @@ setup_unit_test(
   IS_GTEST ON
 )
 # # cmake-format: on
-# setup_distributed_unit_tests(ALL_TEST_TARGETS)
+
+if(FLASHINFER_DISTRIBUTED_UNITTESTS)
+  setup_distributed_unit_tests(ALL_TEST_TARGETS)
+endif(FLASHINFER_DISTRIBUTED_UNITTESTS)
 
 # A top-level target to build all unit tests
 add_custom_target(unittests)
