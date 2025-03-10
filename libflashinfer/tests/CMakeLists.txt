@@ -24,7 +24,7 @@ function(setup_unit_test)
   foreach(test_src IN LISTS arg_TEST_SOURCES)
     message(STATUS "Building ${test_src} unit test")
 
-    get_filename_component(filename_no_ext "${test_src}" TEST_EXEC_NAME)
+    get_filename_component(TEST_EXEC_NAME "${test_src}" NAME_WLE)
     set(TEST_TARGET_NAME ${TEST_EXEC_NAME})
     add_executable(${TEST_TARGET_NAME} EXCLUDE_FROM_ALL ${test_src})
     target_include_directories(${TEST_TARGET_NAME}
@@ -66,11 +66,11 @@ endfunction(setup_unit_test)
 function(setup_distributed_unit_tests test_targets_list)
   find_package(MPI)
 
-  if(NOT PackageMPI_FOUND)
-    message(WARN
+  if(NOT MPI_FOUND)
+    message(WARNING
             "Cannot configure distributed unit tests as MPI package not found")
     return()
-  endif(NOT PackageMPI_FOUND)
+  endif(NOT MPI_FOUND)
 
   set(DISTRIBUTED_UNIT_TESTS_SRC
       ${CMAKE_CURRENT_SOURCE_DIR}/test_sum_all_reduce.cu
@@ -82,15 +82,14 @@ function(setup_distributed_unit_tests test_targets_list)
     GIT_TAG 11e62024d3eb190e005b4689f8c8443d91a6c82e)
   FetchContent_MakeAvailable(mscclpp)
 
-  setup_unit_test(distributed DISTRIBUTED_UNIT_TESTS_SRC
-                  "MPI::MPI_CXX;mscclpp;" "-DENABLE_MPI")
   # cmake-format: off
   setup_unit_test(
     KERNEL_NAME distributed
-    TEST_SOURCES DISTRIBUTED_UNIT_TESTS_SRC
+    TEST_SOURCES ${DISTRIBUTED_UNIT_TESTS_SRC}
     EXTRA_LINK_LIBS "MPI::MPI_CXX;mscclpp;"
+    EXTRA_COMPILE_FLAGS "-DENABLE_MPI"
     ALL_TEST_TARGETS_LIST ALL_TEST_TARGETS
-    IS_GTEST ON
+    IS_GTEST OFF
   )
   # cmake-format: on
 endfunction(setup_distributed_unit_tests)
@@ -172,12 +171,14 @@ add_custom_target(unittests)
 message(STATUS "All unit test targets: ${ALL_TEST_TARGETS}")
 
 # gtest_discover_tests adds all discovered tests as ctest tests.
-# foreach(test_trgt IN ${ALL_TEST_TARGETS}) gtest_discover_tests(${test_trgt})
-# endforeach(test_trgt)
+# FIXME: for some reason google_discover_tests does not add the ctests
+foreach(test_trgt IN LISTS ${ALL_TEST_TARGETS}) 
+  gtest_discover_tests(${test_trgt})
+endforeach(test_trgt)
 
 add_dependencies(unittests ${ALL_TEST_TARGETS})
 # Emulate autotools like `make check` target to run all ctests
-set(CMAKE_CTEST_COMMAND ctest --progress --output-on-failure -j 4)
+set(CMAKE_CTEST_COMMAND ctest --progress --output-on-failure)
 add_custom_target(check COMMAND ${CMAKE_COMMAND} ${CMAKE_CTEST_COMMAND})
 add_dependencies(check unittests)
 
