@@ -5,6 +5,15 @@ project(
   DESCRIPTION "C++ Kernel Library for LLM Serving")
 
 cmake_policy(SET CMP0177 NEW)
+include(FetchContent)
+
+set(BOOST_INCLUDE_LIBRARIES math)
+set(BOOST_ENABLE_CMAKE ON)
+FetchContent_Declare(
+  Boost
+  URL https://github.com/boostorg/boost/releases/download/boost-1.84.0/boost-1.84.0.tar.xz
+  URL_MD5 893b5203b862eb9bbd08553e24ff146a)
+FetchContent_MakeAvailable(Boost)
 
 find_package(Python3 REQUIRED)
 if(NOT Python3_FOUND)
@@ -40,7 +49,7 @@ flashinfer_option(FLASHINFER_TVM_SOURCE_DIR
 flashinfer_option(FLASHINFER_GEN_HEAD_DIMS "Head dims to enable" 128 256)
 flashinfer_option(FLASHINFER_GEN_POS_ENCODING_MODES "Pos encodings to enable" 0)
 flashinfer_option(FLASHINFER_GEN_USE_FP16_QK_REDUCTIONS
-                  "QK reductions to enable" "false")
+                  "QK reductions to enable" "true" "false")
 flashinfer_option(FLASHINFER_GEN_MASK_MODES "Mask modes to enable" 0 1 2)
 
 if(DEFINED FLASHINFER_CUDA_ARCHITECTURES)
