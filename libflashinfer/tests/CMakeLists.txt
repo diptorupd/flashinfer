@@ -22,7 +22,7 @@ function(setup_unit_test)
   cmake_parse_arguments(PARSE_ARGV 0 arg "${options}" "${oneValueArgs}"
                         "${multiValueArgs}")
   foreach(test_src IN LISTS arg_TEST_SOURCES)
-    message(STATUS "Building ${test_src} unit test")
+    message(STATUS "Configure ${test_src} unit test")
 
     get_filename_component(TEST_EXEC_NAME "${test_src}" NAME_WLE)
     set(TEST_TARGET_NAME ${TEST_EXEC_NAME})
@@ -57,7 +57,7 @@ function(setup_unit_test)
     set(${arg_ALL_TEST_TARGETS_LIST}
         ${${arg_ALL_TEST_TARGETS_LIST}}
         PARENT_SCOPE)
-    message(STATUS "Built ${test_src} unit test")
+    message(STATUS "Configured ${test_src} unit test")
 
   endforeach(test_src)
 
@@ -67,8 +67,9 @@ function(setup_distributed_unit_tests test_targets_list)
   find_package(MPI)
 
   if(NOT MPI_FOUND)
-    message(WARNING
-            "Cannot configure distributed unit tests as MPI package not found")
+    message(
+      WARNING "Cannot configure distributed unit tests as MPI package not found"
+    )
     return()
   endif(NOT MPI_FOUND)
 
@@ -170,9 +171,9 @@ add_custom_target(unittests)
 
 message(STATUS "All unit test targets: ${ALL_TEST_TARGETS}")
 
-# gtest_discover_tests adds all discovered tests as ctest tests.
-# FIXME: for some reason google_discover_tests does not add the ctests
-foreach(test_trgt IN LISTS ${ALL_TEST_TARGETS}) 
+# gtest_discover_tests adds all discovered tests as ctest tests. FIXME: for some
+# reason google_discover_tests does not add the ctests
+foreach(test_trgt IN LISTS ${ALL_TEST_TARGETS})
   gtest_discover_tests(${test_trgt})
 endforeach(test_trgt)
 
