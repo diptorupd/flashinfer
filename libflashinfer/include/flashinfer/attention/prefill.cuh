@@ -21,6 +21,9 @@
 #include <cuda_fp8.h>
 #include <cuda_runtime.h>
 
+#include <bit>
+#include <half.hpp>
+
 #include "../cp_async.cuh"
 #include "../fastdiv.cuh"
 #include "../frag_layout_swizzle.cuh"
@@ -33,9 +36,6 @@
 #include "cascade.cuh"
 #include "mask.cuh"
 #include "variants.cuh"
-
-#include <bit>
-#include <half.hpp>
 namespace flashinfer {
 
 DEFINE_HAS_MEMBER(maybe_q_rope_offset)
@@ -133,20 +133,20 @@ struct KernelTraits {
             (sizeof(DTypeKV) == 1 && POS_ENCODING_MODE == PosEncodingMode::kRoPELlama));
   }
 
-  template<typename DTypeQKAccum>
-  static constexpr DTypeQKAccum getNegInfFromFp32() { 
-    if constexpr  (std::is_same<DTypeQKAccum, __half>::value) {
+  template <typename DTypeQKAccum>
+  static constexpr DTypeQKAccum getNegInfFromFp32() {
+    if constexpr (std::is_same<DTypeQKAccum, __half>::value) {
       return std::bit_cast<__half>(fp16_ieee_from_fp32_value(-math::inf));
-    } 
-    else {
+    } else {
       return DTypeQKAccum(-math::inf);
     }
   }
 
   using SharedStorage = SharedStorageQKVO<NUM_WARPS_KV, CTA_TILE_Q, CTA_TILE_KV, HEAD_DIM_QK,
                                           HEAD_DIM_VO, DTypeQ, DTypeKV, DTypeO>;
-  
-  static constexpr DTypeQKAccum MaskFillValue = AttentionVariant::use_softmax ? getNegInfFromFp32<DTypeQKAccum>() : DTypeQKAccum(0.f);
+
+  static constexpr DTypeQKAccum MaskFillValue =
+      AttentionVariant::use_softmax ? getNegInfFromFp32<DTypeQKAccum>() : DTypeQKAccum(0.f);
 };
 
 namespace {
