@@ -1,7 +1,7 @@
-#SPDX - FileCopyrightText : 2017 - 2024 Marat Dukhan
-#SPDX - FileCopyrightText : 2025 AMD Inc.
-#
-#SPDX - License - Identifier : MIT
+//SPDX - FileCopyrightText : 2017 - 2024 Marat Dukhan
+//SPDX - FileCopyrightText : 2025 Advanced Micro Devices, Inc. 
+//
+//SPDX - License - Identifier : MIT
 
 #pragma once
 

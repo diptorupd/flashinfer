@@ -22,7 +22,7 @@
 #include <cuda_runtime.h>
 
 #include <bit>
-#include <half.hpp>
+#include "../fp16.h"
 
 #include "../cp_async.cuh"
 #include "../fastdiv.cuh"

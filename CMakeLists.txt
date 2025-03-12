@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.23.1)
 project(flashinfer CUDA CXX)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CUDA_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CUDA_STANDARD 20)
 
 # Load CMake modules to search for Thrust
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
