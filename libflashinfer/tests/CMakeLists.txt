@@ -50,7 +50,7 @@ function(setup_unit_test)
     endif(${arg_IS_GTEST})
 
     # Add the target to the ALL_TEST_TARGETS_LIST list so that it gets built
-    # when the unittests target is invoked.
+    # when the build_tests target is invoked.
     list(APPEND ${arg_ALL_TEST_TARGETS_LIST} ${TEST_TARGET_NAME})
     set(${arg_ALL_TEST_TARGETS_LIST}
         ${${arg_ALL_TEST_TARGETS_LIST}}
@@ -101,6 +101,7 @@ set(SAMPLING_UNIT_TEST_SRCS "test_sampling.cu")
 set(NORM_UNIT_TEST_SRCS "test_norm.cu")
 set(FASTDIV_UNIT_TEST_SRCS "test_fastdiv.cu")
 set(FASTDEQUANT_UNIT_TEST_SRCS "test_fast_dequant.cu")
+set(FP16_TOFROM_FP32_UNIT_TESTS "test_fp16.cpp")
 
 set(options OPTIONAL IS_GTEST)
 set(oneValueArgs KERNEL_NAME)
@@ -158,6 +159,12 @@ setup_unit_test(
   ALL_TEST_TARGETS_LIST ALL_TEST_TARGETS
   IS_GTEST ON
 )
+setup_unit_test(
+  KERNEL_NAME fp16_tofrom_fp32
+  TEST_SOURCES ${FP16_TOFROM_FP32_UNIT_TESTS}
+  ALL_TEST_TARGETS_LIST ALL_TEST_TARGETS
+  IS_GTEST ON
+)
 # cmake-format: on
 
 if(FLASHINFER_DISTRIBUTED_UNITTESTS)
@@ -165,7 +172,7 @@ if(FLASHINFER_DISTRIBUTED_UNITTESTS)
 endif(FLASHINFER_DISTRIBUTED_UNITTESTS)
 
 # A top-level target to build all unit tests
-add_custom_target(unittests)
+add_custom_target(build_tests)
 
 message(STATUS "All unit test targets: ${ALL_TEST_TARGETS}")
 
@@ -175,10 +182,10 @@ foreach(test_trgt IN LISTS ${ALL_TEST_TARGETS})
   gtest_discover_tests(${test_trgt})
 endforeach(test_trgt)
 
-add_dependencies(unittests ${ALL_TEST_TARGETS})
+add_dependencies(build_tests ${ALL_TEST_TARGETS})
 # Emulate autotools like `make check` target to run all ctests
 set(CMAKE_CTEST_COMMAND ctest --progress --output-on-failure)
 add_custom_target(check COMMAND ${CMAKE_COMMAND} ${CMAKE_CTEST_COMMAND})
-add_dependencies(check unittests)
+add_dependencies(check build_tests)
 
 enable_testing()
