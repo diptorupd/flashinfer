@@ -22,10 +22,10 @@
 #include <cuda_runtime.h>
 
 #include <bit>
-#include "../fp16.h"
 
 #include "../cp_async.cuh"
 #include "../fastdiv.cuh"
+#include "../fp16.h"
 #include "../frag_layout_swizzle.cuh"
 #include "../math.cuh"
 #include "../mma.cuh"

@@ -9,10 +9,8 @@ include(FetchContent)
 
 set(BOOST_ENABLE_CMAKE ON)
 include(FetchContent)
-FetchContent_Declare(
-  boost_math
-  GIT_REPOSITORY https://github.com/boostorg/math.git
-)
+FetchContent_Declare(boost_math
+                     GIT_REPOSITORY https://github.com/boostorg/math.git)
 FetchContent_MakeAvailable(boost_math)
 
 message(STATUS "boost_math_SOURCE_DIR ${boost_math_SOURCE_DIR}")
