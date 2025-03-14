@@ -4,72 +4,29 @@
  *
  * Modified by the FlashInfer team.
  */
-#ifndef FLASHINFER_ATTENTION_HOPPER_EPILOGUE_CUH_
-#define FLASHINFER_ATTENTION_HOPPER_EPILOGUE_CUH_
+#ifndef FLASHINFER_ATTENTION_HOPPER_FP8_EPILOGUE_CUH_
+#define FLASHINFER_ATTENTION_HOPPER_FP8_EPILOGUE_CUH_
 
 #include <cutlass/cutlass.h>
 
-#include "../../math.cuh"
+#include "../../../math.cuh"
+#include "../epilogue.cuh"
+#include "../named_barrier.cuh"
+#include "../utils.cuh"
 #include "cute/tensor.hpp"
 #include "cutlass/gemm/collective/collective_builder.hpp"
-#include "named_barrier.cuh"
-#include "utils.cuh"
 
 namespace flashinfer {
 
 using namespace cute;
 
-template <int NUM_COPY_THREADS, typename DTypeO, typename TiledCopyO, typename LayoutO,
-          typename TileShapeO, typename SMemO>
-__forceinline__ __device__ void write_tiled(DTypeO* O, const TiledCopyO& tiled_copy_O,
-                                            const LayoutO& layout_O, const TileShapeO& tile_shape_O,
-                                            const SMemO& sO, int thread_idx, int qo_tile_idx,
-                                            int qo_head_idx, int qo_indptr, int64_t qo_len) {
-  Tensor mO = make_tensor(make_gmem_ptr(O + qo_indptr * stride<0>(layout_O)), layout_O);
-  Tensor gO =
-      get_local_tile_tensor(mO, tile_shape_O, qo_head_idx, 0, qo_len)(_, _, qo_tile_idx);  // (O, D)
-  Tensor cO = cute::make_identity_tensor(gO.shape());  // (O, D) -> (o_idx, d_idx)
-
-  ThrCopy thr_copy_O = tiled_copy_O.get_slice(thread_idx);
-  Tensor tOgO = thr_copy_O.partition_D(gO);  // (CPY, CPY_O, CPY_D)
-  Tensor tOsO = thr_copy_O.partition_S(sO);  // (CPY, CPY_O, CPY_D)
-  Tensor tOcO = thr_copy_O.partition_D(cO);  // (CPY, CPY_O, CPY_D)
-  Tensor tOsOGroup = flatten_1(tOsO);        // (CPY, (CPY_O, CPY_D))
-  Tensor tOgOGroup = flatten_1(tOgO);        // (CPY, (CPY_O, CPY_D))
-  Tensor tOcOGroup = flatten_1(tOcO);        // (CPY, (CPY_O, CPY_D))
-
-  const int qo_tile_size = get<0>(tile_shape_O);
-  int valid_qo_tile_size = std::min<int>(qo_len - qo_tile_idx * qo_tile_size, qo_tile_size);
-  if (valid_qo_tile_size == qo_tile_size) {
-    copy(tiled_copy_O, tOsOGroup, tOgOGroup);
-  } else {
-    // copy if not out of bound
-    auto predicate_fn = [&](auto coords) {
-      auto s_coords = tOcOGroup(_0{}, coords);
-      return elem_less(get<0>(s_coords), valid_qo_tile_size);
-    };
-    copy_if(tiled_copy_O, predicate_fn, tOsOGroup, tOgOGroup);
-  }
-}
-
-template <int NUM_COPY_THREADS, typename ElemO, typename TiledCopyO, typename LayoutO,
-          typename TileShapeO, typename SMemO>
-__forceinline__ __device__ void write_O(ElemO* O, const TiledCopyO& tiled_copy_O,
-                                        const LayoutO& layout_O, const TileShapeO& tile_shape_O,
-                                        const SMemO& sO, int thread_idx, int qo_tile_idx,
-                                        int qo_head_idx, int qo_indptr, int qo_len,
-                                        int write_warp_idx) {
-  write_tiled<NUM_COPY_THREADS>(O, tiled_copy_O, layout_O, tile_shape_O, sO, thread_idx,
-                                qo_tile_idx, qo_head_idx, qo_indptr, qo_len);
-}
-
 template <typename Ktraits>
-struct CollectiveEpilogue {
+struct FP8CollectiveEpilogue {
   using DTypeO = typename Ktraits::DTypeO;
   static constexpr int CTA_Q = Ktraits::CTA_Q;
   static constexpr int CTA_KV = Ktraits::CTA_KV;
-  static constexpr int HEAD_DIM_VO = Ktraits::HEAD_DIM_VO;
-  using TileShape_PDV = Shape<Int<CTA_Q>, Int<HEAD_DIM_VO>, Int<CTA_KV>>;
+  static constexpr int HEAD_DIM = Ktraits::HEAD_DIM;
+  using TileShape_QKD = Shape<Int<CTA_Q>, Int<CTA_KV>, Int<HEAD_DIM>>;
 
   static constexpr int NUM_WARPS = Ktraits::NUM_WARPS;
   static constexpr int NUM_THREADS = NUM_WARPS * cutlass::NumThreadsPerWarp;
@@ -78,9 +35,9 @@ struct CollectiveEpilogue {
   static constexpr int NUM_MMA_THREADS = NUM_THREADS - NUM_COPY_THREADS;
 
   using SmemLayoutAtomO = decltype(cutlass::gemm::collective::detail::ss_smem_selector<
-                                   GMMA::Major::K, DTypeO, decltype(cute::get<0>(TileShape_PDV{})),
-                                   decltype(cute::get<1>(TileShape_PDV{}))>());
-  using SmemLayoutO = decltype(tile_to_shape(SmemLayoutAtomO{}, select<0, 1>(TileShape_PDV{})));
+                                   GMMA::Major::K, DTypeO, decltype(cute::get<0>(TileShape_QKD{})),
+                                   decltype(cute::get<2>(TileShape_QKD{}))>());
+  using SmemLayoutO = decltype(tile_to_shape(SmemLayoutAtomO{}, select<0, 2>(TileShape_QKD{})));
 
   using SmemCopyAtomO = Copy_Atom<cute::SM90_U32x4_STSM_N, DTypeO>;
   using SharedStorage = cute::array_aligned<DTypeO, cute::cosize_v<SmemLayoutO>>;
@@ -97,11 +54,11 @@ struct CollectiveEpilogue {
   using TMA_O = decltype(make_tma_copy(
       GmemTiledCopyOTMA{},
       make_tensor(make_gmem_ptr(static_cast<DTypeO*>(nullptr)), ShapeT{}, StrideT{}), SmemLayoutO{},
-      select<0, 1>(TileShape_PDV{}), _1{}));  // no mcast for O
+      select<0, 2>(TileShape_QKD{}), _1{}));  // no mcast for O
 
   static constexpr int VEC_SIZE = cute::ceil_div(128, sizeof_bits_v<DTypeO>);
-  static_assert(HEAD_DIM_VO % VEC_SIZE == 0);
-  static constexpr int NUM_THREADS_PER_ROW = HEAD_DIM_VO / VEC_SIZE;
+  static_assert(HEAD_DIM % VEC_SIZE == 0);
+  static constexpr int NUM_THREADS_PER_ROW = HEAD_DIM / VEC_SIZE;
   static_assert(NUM_MMA_THREADS % NUM_THREADS_PER_ROW == 0);
   static constexpr int NUM_ROWS = NUM_MMA_THREADS / NUM_THREADS_PER_ROW;
   using TiledCopyOAtom = cute::Copy_Atom<cute::UniversalCopy<cutlass::uint128_t>, DTypeO>;
@@ -116,11 +73,11 @@ struct CollectiveEpilogue {
 
   // used for rmem -> smem O copy in fp8 kernel to undo column permutation
   using ThreadLayoutrO = Layout<Shape<_8, Int<CTA_Q / 16>, _4, _1>, Stride<_4, _32, _1, _0>>;
-  using ValueLayoutrO = Layout<Shape<_1, _2, Shape<_2, _2>, Int<HEAD_DIM_VO / 16>>,
-                               Stride<_0, _2, Stride<_4, _1>, _8>>;
+  using ValueLayoutrO =
+      Layout<Shape<_1, _2, Shape<_2, _2>, Int<HEAD_DIM / 16>>, Stride<_0, _2, Stride<_4, _1>, _8>>;
   using TiledCopyrO = decltype(make_tiled_copy(Copy_Atom<UniversalCopy<uint16_t>, DTypeO>{},
                                                ThreadLayoutrO{}, ValueLayoutrO{}));
-  using TiledCopyShaperO = Shape<_8, Int<CTA_Q / 8>, _16, Int<HEAD_DIM_VO / 16>>;
+  using TiledCopyShaperO = Shape<_8, Int<CTA_Q / 8>, _16, Int<HEAD_DIM / 16>>;
   using SmemLayoutrO = decltype(composition(SmemLayoutO{}, Layout<TiledCopyShaperO>{}));
 
   // Host side kernel arguments
@@ -155,38 +112,36 @@ struct CollectiveEpilogue {
                             TiledMma tiled_mma, int thread_idx, BlockCoord const& block_coord) {
     auto [qo_tile_idx, qo_head_idx, kv_head_idx, qo_indptr, kv_indptr, qo_len, kv_len] =
         block_coord;
-    Tensor sO = make_tensor(make_smem_ptr(shared_storage.smem_o.data()), SmemLayoutO{});
-    auto smem_tiled_copy_O = make_tiled_copy_C(SmemCopyAtomO{}, tiled_mma);
-    auto smem_thr_copy_O = smem_tiled_copy_O.get_thread_slice(thread_idx);
 
+    TiledCopyrO rmem_tiled_copy_O;
+    Tensor sOacc = make_tensor(make_smem_ptr(shared_storage.smem_o.data()), SmemLayoutrO{});
+    auto rmem_thr_copy_O = rmem_tiled_copy_O.get_thread_slice(thread_idx);
+
+    Tensor taccOsO = rmem_thr_copy_O.partition_D(sOacc);
     Tensor tOrO_out = convert_type<DTypeO>(tOrO);
-    Tensor tOrO_retile = smem_thr_copy_O.retile_S(tOrO_out);  // ((Atom,AtomNum), MMA_M, MMA_N)
-    Tensor tOsO = smem_thr_copy_O.partition_D(sO);            // ((Atom,AtomNum),PIPE_M,PIPE_N)
+    Tensor taccOrO = make_tensor(tOrO_out.data(), shape(taccOsO));
 
     // Make sure all WGs have finished reading V
     cutlass::arch::NamedBarrier::sync(NUM_MMA_THREADS,
                                       /*id=*/static_cast<int>(NamedBarriers::kValueEmpty));
-    cute::copy(smem_tiled_copy_O, tOrO_retile, tOsO);
+    cute::copy(rmem_tiled_copy_O, taccOrO, taccOsO);
     cutlass::arch::fence_view_async_shared();  // ensure smem writes are visible to TMA
-    cutlass::arch::NamedBarrier::arrive(NUM_MMA_THREADS + Ktraits::NUM_PRODUCER_THREADS,
-                                        cutlass::arch::ReservedNamedBarriers::EpilogueBarrier);
-
     Tensor mLSE = make_tensor(make_gmem_ptr(epilogue_params.lse_ptr), epilogue_params.layout_LSE);
     Tensor gLSE = get_lse_local_tile_tensor(mLSE, Shape<Int<CTA_Q>>{}, qo_head_idx, qo_indptr,
                                             qo_len)(_, qo_tile_idx);
-    Tensor cO = cute::make_identity_tensor(select<0, 1>(TileShape_PDV{}));
+    Tensor caccO = cute::make_identity_tensor(select<0, 2>(TileShape_QKD{}));
     auto thread_mma = tiled_mma.get_thread_slice(thread_idx);
-    Tensor tOcO = thread_mma.partition_C(cO);  // (MMA,MMA_M,MMA_K)
-    static_assert(decltype(size<0, 0>(tOcO))::value == 2);
-    static_assert(decltype(size<0, 1>(tOcO))::value == 2);
-    // tOcO has shape ((2, 2, V), MMA_M, MMA_K), we only take only the row indices.
-    Tensor tOcO_row = tOcO(make_coord(_0{}, _, _0{}), _, _0{});
-    CUTE_STATIC_ASSERT_V(size(lse) == size(tOcO_row));  // MMA_M
-    if (epilogue_params.lse_ptr) {                      // don't write to LSE if it's nullptr
-      if (get<1>(tOcO_row(_0{})) == 0) {
+    Tensor taccOcO = thread_mma.partition_C(caccO);  // (MMA,MMA_M,MMA_K)
+    static_assert(decltype(size<0, 0>(taccOcO))::value == 2);
+    static_assert(decltype(size<0, 1>(taccOcO))::value == 2);
+    // taccOcO has shape ((2, 2, V), MMA_M, MMA_K), we only take only the row indices.
+    Tensor taccOcO_row = taccOcO(make_coord(_0{}, _, _0{}), _, _0{});
+    CUTE_STATIC_ASSERT_V(size(lse) == size(taccOcO_row));  // MMA_M
+    if (epilogue_params.lse_ptr) {                         // don't write to LSE if it's nullptr
+      if (get<1>(taccOcO_row(_0{})) == 0) {
 #pragma unroll
         for (int mi = 0; mi < size(lse); ++mi) {
-          const int row = get<0>(tOcO_row(mi));
+          const int row = get<0>(taccOcO_row(mi));
           if (row < qo_len - qo_tile_idx * CTA_Q) {
             gLSE(row) = lse(mi);
           }
@@ -195,13 +150,10 @@ struct CollectiveEpilogue {
     }
 
     int write_warp_idx = NUM_WARPS - 1;
-    if (cutlass::canonical_warp_idx_sync() == write_warp_idx) {
-      cutlass::arch::NamedBarrier::sync(NUM_MMA_THREADS + Ktraits::NUM_PRODUCER_THREADS,
-                                        cutlass::arch::ReservedNamedBarriers::EpilogueBarrier);
-    }
     TiledCopyO gmem_tiled_copy_O;
+    Tensor sO = make_tensor(make_smem_ptr(shared_storage.smem_o.data()), SmemLayoutO{});
     write_O<NUM_COPY_THREADS>(epilogue_params.O_ptr, gmem_tiled_copy_O, epilogue_params.layout_O,
-                              select<0, 1>(TileShape_PDV{}), sO, thread_idx, qo_tile_idx,
+                              select<0, 2>(TileShape_QKD{}), sO, thread_idx, qo_tile_idx,
                               qo_head_idx, qo_indptr, qo_len, write_warp_idx);
   }
 
@@ -216,7 +168,7 @@ struct CollectiveEpilogue {
     auto [qo_tile_idx, qo_head_idx, kv_head_idx, qo_indptr, kv_indptr, qo_len, kv_len] =
         block_coord;
     Tensor mO = make_tensor(make_gmem_ptr(epilogue_params.O_ptr), epilogue_params.layout_O);
-    Tensor gO = get_local_tile_tensor(mO, select<0, 1>(TileShape_PDV{}), qo_head_idx, qo_indptr,
+    Tensor gO = get_local_tile_tensor(mO, select<0, 2>(TileShape_QKD{}), qo_head_idx, qo_indptr,
                                       qo_len)(_, _, qo_tile_idx);  // (O, D)
     Tensor cO = cute::make_identity_tensor(gO.shape());            // (O, D) -> (o_idx, d_idx)
     Tensor mLSE = make_tensor(make_gmem_ptr(epilogue_params.lse_ptr), epilogue_params.layout_LSE);
@@ -233,7 +185,7 @@ struct CollectiveEpilogue {
     Tensor tOrOGroup = flatten_1(tOrO);        // (CPY, (CPY_O, CPY_D))
     Tensor tOcOGroup = flatten_1(tOcO);        // (CPY, (CPY_O, CPY_D))
 
-    const int qo_tile_size = get<0>(TileShape_PDV{});
+    const int qo_tile_size = get<0>(TileShape_QKD{});
     int valid_qo_tile_size = std::min<int>(qo_len - qo_tile_idx * qo_tile_size, qo_tile_size);
     if (valid_qo_tile_size == qo_tile_size) {
       copy(tiled_copy_O, tOrOGroup, tOgOGroup);
@@ -256,4 +208,4 @@ struct CollectiveEpilogue {
 
 }  // namespace flashinfer
 
-#endif  // FLASHINFER_ATTENTION_HOPPER_EPILOGUE_CUH_
+#endif  // FLASHINFER_ATTENTION_HOPPER_FP8_EPILOGUE_CUH_
