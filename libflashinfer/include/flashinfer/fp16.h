@@ -29,7 +29,6 @@ static constexpr uint16_t fp16_ieee_from_fp32_value(float f) {
 
   float base = saturated_f * scale_to_zero;
 
-  // const uint32_t w = fp32_to_bits(f);
   const uint32_t w = std::bit_cast<uint32_t>(f);
   const uint32_t shl1_w = w + w;
   const uint32_t sign = w & UINT32_C(0x80000000);

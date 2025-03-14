@@ -7,14 +7,20 @@ project(
 cmake_policy(SET CMP0177 NEW)
 include(FetchContent)
 
+#------------------------------ Dependencies ----------------------------------#
+
+FetchContent_Declare(
+  mscclpp
+  GIT_REPOSITORY https://github.com/microsoft/mscclpp.git
+  GIT_TAG 11e62024d3eb190e005b4689f8c8443d91a6c82e)
+FetchContent_MakeAvailable(mscclpp)
+
 set(BOOST_ENABLE_CMAKE ON)
-include(FetchContent)
 FetchContent_Declare(boost_math
                      GIT_REPOSITORY https://github.com/boostorg/math.git)
 FetchContent_MakeAvailable(boost_math)
 
-message(STATUS "boost_math_SOURCE_DIR ${boost_math_SOURCE_DIR}")
-message(STATUS "boost_math_BINARY_DIR ${boost_math_BINARY_DIR}")
+#------------------------------------------------------------------------------#
 
 find_package(Python3 REQUIRED)
 if(NOT Python3_FOUND)
