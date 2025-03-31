@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.23.1)
+cmake_minimum_required(VERSION 3.26.1)
 
 # Load CMake modules and utilities
 set(CMAKE_MODULE_PATH
@@ -14,10 +14,13 @@ set_current_release()
 project(
   flashinfer
   LANGUAGES CUDA CXX
-  VERSION ${PROJECT_VERSION})
+  VERSION ${PROJECT_VERSION}
+  DESCRIPTION "Fast Attention Algorithms for LLM Inference")
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CUDA_STANDARD 20)
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # ==== RPATH CONFIGURATION ====
 # Set Linux RPATH base
@@ -62,7 +65,9 @@ set(FLASHINFER_NVCC_FLAGS
     "--threads=1"
     "-Xfatbin=-compress-all"
     "-use_fast_math"
-    "--expt-relaxed-constexpr")
+    "--expt-relaxed-constexpr"
+    "-lineinfo"
+    "-Xptxas=-v")
 # cmake-format: on
 
 # Join the lists with spaces to form the flag strings
@@ -103,6 +108,11 @@ if(FLASHINFER_TVM_BINDING)
   add_subdirectory(tvm_binding)
 endif()
 
+if(FLASHINFER_BUILD_WHEELS)
+  message(STATUS "Building PyTorch CUDA extensions")
+  add_subdirectory(flashinfer)
+endif()
+
 # Generate the flashinferConfig.cmake file
 include(CMakePackageConfigHelpers)
 write_basic_package_version_file(
@@ -115,9 +125,11 @@ configure_package_config_file(
   "${CMAKE_CURRENT_BINARY_DIR}/flashinferConfig.cmake"
   INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/flashinfer)
 
-# Install CMake configuration
-install(
-  FILES "${CMAKE_CURRENT_BINARY_DIR}/flashinferConfig.cmake"
-        "${CMAKE_CURRENT_BINARY_DIR}/flashinferConfigVersion.cmake"
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/flashinfer
-  COMPONENT Headers)
+if(NOT FLASHINFER_BUILD_WHEELS)
+  # Install CMake configuration
+  install(
+    FILES "${CMAKE_CURRENT_BINARY_DIR}/flashinferConfig.cmake"
+          "${CMAKE_CURRENT_BINARY_DIR}/flashinferConfigVersion.cmake"
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/flashinfer
+    COMPONENT Headers)
+endif()
