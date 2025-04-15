@@ -1,120 +1,66 @@
-# Copyright (c) 2024 by FlashInfer team.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#   http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+[build-system]
+requires = [
+    "scikit-build-core>=0.4.3",
+    "setuptools_scm>=8.0.0",
+    "torch >= 2.4",
+    "numpy",
+    "cmake >=3.26.1",
+    "ninja"
+]
+build-backend = "scikit_build_core.build"
 
 [project]
-name = "flashinfer-python"
-description = "FlashInfer: Kernel Library for LLM Serving"
-requires-python = ">=3.8,<4.0"
-authors = [{ name = "FlashInfer team" }]
-license = { text = "Apache License 2.0" }
+name = "flashinfer"
+dynamic = ["version"]
+description = "Fast Attention Algorithms for LLM Inference"
+requires-python = ">=3.8"
 readme = "README.md"
-urls = { Homepage = "https://github.com/flashinfer-ai/flashinfer" }
-dynamic = ["dependencies", "version"]
-
-[build-system]
-requires = ["setuptools"]
-build-backend = "custom_backend"
-backend-path = ["."]
-
-[tool.codespell]
-ignore-words-list = "3nd"
-skip = [
-    "build",
-    "3rdparty",
-    "dist",
-    ".venv"
+license = "Apache-2.0"
+authors = [
+    {name = "FlashInfer Team"}
+]
+dependencies = [
+    "torch>=2.4",
+    "numpy",
 ]
 
-[tool.setuptools]
-packages = [
-    "flashinfer",
-    "flashinfer.data",
-    "flashinfer.data.csrc",
-    "flashinfer.data.cutlass",
-    "flashinfer.data.tvm_binding",
-    "flashinfer.data.libflashinfer.include",
-    "flashinfer.jit",
-    "flashinfer.jit.attention",
-    "flashinfer.triton",
-    "flashinfer.triton.kernels",
-]
-include-package-data = false
-
-[tool.setuptools.package-dir]
-"flashinfer.data" = "."
-"flashinfer.data.cutlass" = "3rdparty/cutlass"
-"flashinfer.data.libflashinfer" = "libflashinfer"
-
-[tool.setuptools.package-data]
-"flashinfer.data" = [
-    "csrc/**",
-    "libflashinfer/include/**",
-    "tvm_binding/**",
-    "version.txt"
-]
-"flashinfer.data.cutlass" = [
-    "include/**",
-    "tools/util/include/**"
+[project.optional-dependencies]
+dev = [
+    "pytest",
 ]
 
-[tool.mypy]
-ignore_missing_imports = false
-show_column_numbers = true
-show_error_context = true
-follow_imports = "skip"
-ignore_errors = false
-strict_optional = false
+[tool.setuptools_scm]
+write_to = "flashinfer/_version.py"
+version_scheme = "post-release"
+local_scheme = "no-local-version"
+fallback_version = "0.0.0"
 
+[tool.scikit-build]
+build.verbose = true
+logging.level = "INFO"
+build-dir = "_skbuild"
+experimental = true
+metadata.version.provider = "scikit_build_core.metadata.setuptools_scm"
+sdist.include = ["flashinfer/_version.py"]
 
-[tool.ruff.lint]
-select = [
-    # pycodestyle
-    "E",
-    # Pyflakes
-    "F",
-    # pyupgrade
-    # "UP",
-    # flake8-bugbear
-    "B",
-    # flake8-simplify
-    "SIM",
-    # isort
-    # "I",
-]
-ignore = [
-    # Module level import not at top of file
-    "E402",
-    # star imports
-    "F405", "F403",
-    # ambiguous name
-    "E741",
-    # line too long
-    "E501",
-    # key in dict.keys()
-    "SIM118",
-    # memory leaks
-    "B019",
-    # No such file or directory
-    "E902",
-    # nested `if` statements
-    "SIM102",
-    # `if`-`else`-block
-    "SIM108",
-    # assign `lambda` expressions
-    "E731",
-    # Loop control variable overrides iterable it iterates
-    "B020",
-    # Return te negated condition directly
-    "SIM103",
-]
+# Base CMake definitions - applied to all builds
+[tool.scikit-build.cmake.define]
+FLASHINFER_CUTLASS_DIR = {env="FLASHINFER_CUTLASS_DIR", default="3rdparty/cutlass"}
+FLASHINFER_CUDA_ARCHITECTURES = "80"
+TORCH_CUDA_ARCH_LIST = "8.0"
+FLASHINFER_BUILD_WHEELS="ON"
+FLASHINFER_AOT_TORCH_EXTS_CUDA = {env="FLASHINFER_AOT_TORCH_EXTS_CUDA", default="OFF"}
+FLASHINFER_ENABLE_F16="ON"
+FLASHINFER_ENABLE_BF16="ON"
+FLASHINFER_ENABLE_FP8="ON"
+FLASHINFER_ENABLE_FP8_E4M3="ON"
+FLASHINFER_ENABLE_FP8_E5M2="ON"
+
+[tool.isort]
+ensure_newline_before_comments = true
+force_grid_wrap = 0
+include_trailing_comma = true
+line_length = 80
+multi_line_output = 3
+skip = ["flashinfer/_version.py"]
+use_parentheses = true

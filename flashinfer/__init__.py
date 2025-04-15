@@ -14,7 +14,27 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from ._build_meta import __version__ as __version__
+"""
+FlashInfer: Fast Attention Algorithms for LLM Inference
+"""
+
+try:
+    from .__config__ import __version__, get_info, show
+except ImportError:
+    # Fallback for development mode
+    version = "0.0.0+dev"
+
+    def get_info(name=None):
+        info = {"version": version}
+        if name is None:
+            return info
+        return info.get(name)
+
+    def show():
+        print("FlashInfer development configuration")
+        print(f"version: {version}")
+
+
 from .activation import gelu_and_mul as gelu_and_mul
 from .activation import gelu_tanh_and_mul as gelu_tanh_and_mul
 from .activation import silu_and_mul as silu_and_mul
@@ -55,7 +75,9 @@ from .prefill import (
 from .prefill import (
     BatchPrefillWithRaggedKVCacheWrapper as BatchPrefillWithRaggedKVCacheWrapper,
 )
-from .prefill import single_prefill_with_kv_cache as single_prefill_with_kv_cache
+from .prefill import (
+    single_prefill_with_kv_cache as single_prefill_with_kv_cache,
+)
 from .prefill import (
     single_prefill_with_kv_cache_return_lse as single_prefill_with_kv_cache_return_lse,
 )
@@ -84,7 +106,9 @@ from .sampling import top_k_sampling_from_probs as top_k_sampling_from_probs
 from .sampling import (
     top_k_top_p_sampling_from_logits as top_k_top_p_sampling_from_logits,
 )
-from .sampling import top_k_top_p_sampling_from_probs as top_k_top_p_sampling_from_probs
+from .sampling import (
+    top_k_top_p_sampling_from_probs as top_k_top_p_sampling_from_probs,
+)
 from .sampling import top_p_renorm_probs as top_p_renorm_probs
 from .sampling import top_p_sampling_from_probs as top_p_sampling_from_probs
 from .sparse import BlockSparseAttentionWrapper as BlockSparseAttentionWrapper
