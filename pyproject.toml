@@ -42,6 +42,7 @@ build-dir = "_skbuild"
 experimental = true
 metadata.version.provider = "scikit_build_core.metadata.setuptools_scm"
 sdist.include = ["flashinfer/_version.py"]
+wheel.py-api = "cp39"
 
 # Base CMake definitions - applied to all builds
 [tool.scikit-build.cmake.define]
@@ -55,12 +56,6 @@ FLASHINFER_ENABLE_BF16="ON"
 FLASHINFER_ENABLE_FP8="ON"
 FLASHINFER_ENABLE_FP8_E4M3="ON"
 FLASHINFER_ENABLE_FP8_E5M2="ON"
-
-[tool.scikit-build.wheel]
-# Set the minimum Python version for ABI compatibility
-py-api = "cp39"
-abi = "abi3"
-platforms = ["manylinux_2_28_x86_64"]
 
 [tool.isort]
 ensure_newline_before_comments = true
