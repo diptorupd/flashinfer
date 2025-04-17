@@ -21,7 +21,7 @@ import warnings
 
 from torch.utils.cpp_extension import _get_cuda_arch_flags
 
-from flashinfer import (
+from ..get_include_paths import (
     get_csrc_dir,
     get_cutlass_include,
     get_include,

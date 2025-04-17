@@ -125,9 +125,11 @@ configure_package_config_file(
   "${CMAKE_CURRENT_BINARY_DIR}/flashinferConfig.cmake"
   INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/flashinfer)
 
-# Install CMake configuration
-install(
-  FILES "${CMAKE_CURRENT_BINARY_DIR}/flashinferConfig.cmake"
-        "${CMAKE_CURRENT_BINARY_DIR}/flashinferConfigVersion.cmake"
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/flashinfer
-  COMPONENT Headers)
+if(NOT FLASHINFER_BUILD_WHEELS)
+  # Install CMake configuration
+  install(
+    FILES "${CMAKE_CURRENT_BINARY_DIR}/flashinferConfig.cmake"
+          "${CMAKE_CURRENT_BINARY_DIR}/flashinferConfigVersion.cmake"
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/flashinfer
+    COMPONENT Headers)
+endif()

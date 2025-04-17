@@ -53,10 +53,10 @@ install(
   PATTERN "*.cuh"
   PATTERN "*.inl")
 
-# Install CUTLASS tools headers
+# Install CUTE headers
 install(
-  DIRECTORY "${CUTLASS_TOOLS_INCLUDE_DIR}/"
-  DESTINATION "flashinfer/include/cutlass_tools"
+  DIRECTORY "${CUTLASS_MAIN_INCLUDE_DIR}/"
+  DESTINATION "flashinfer/include/cute"
   FILES_MATCHING
   PATTERN "*.h"
   PATTERN "*.hpp"

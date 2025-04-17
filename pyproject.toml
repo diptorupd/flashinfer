@@ -56,6 +56,12 @@ FLASHINFER_ENABLE_FP8="ON"
 FLASHINFER_ENABLE_FP8_E4M3="ON"
 FLASHINFER_ENABLE_FP8_E5M2="ON"
 
+[tool.scikit-build.wheel]
+# Set the minimum Python version for ABI compatibility
+py-api = "cp39"
+abi = "abi3"
+platforms = ["manylinux_2_28_x86_64"]
+
 [tool.isort]
 ensure_newline_before_comments = true
 force_grid_wrap = 0

@@ -96,8 +96,7 @@ flashinfer_generate_config_header(
 # cmake-format: on
 # ---------------------------------------------------------------------------#
 
-# Build decode_kernels and prefill_kernels if FLASHINFER_BUILD_KERNELS is ON or
-# if tests or benchmarks are enabled
+# Build decode_kernels and prefill_kernels if needed
 if(FLASHINFER_BUILD_KERNELS
    OR FLASHINFER_UNITTESTS
    OR FLASHINFER_CXX_BENCHMARKS)
@@ -115,26 +114,25 @@ if(FLASHINFER_BUILD_KERNELS
     target_link_libraries(prefill_kernels PRIVATE Boost::math)
   endif()
 
-  # Always add targets to the export set
-  install(
-    TARGETS decode_kernels prefill_kernels
-    EXPORT libflashinferTargets
-    COMPONENT Kernels
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-    INCLUDES
-    DESTINATION ${_FLASHINFER_INCLUDE_INSTALL_DIR}
-    EXCLUDE_FROM_ALL ${FLASHINFER_BUILD_WHEELS})
-
-  # Always export targets from the build tree
-  export(
-    EXPORT libflashinferTargets
-    FILE "${CMAKE_CURRENT_BINARY_DIR}/libflashinferTargets.cmake"
-    NAMESPACE flashinfer::)
-
-  # Install the export set only when NOT building wheels
+  # Only for non-wheel builds: Install libraries and export targets
   if(NOT FLASHINFER_BUILD_WHEELS)
+    install(
+      TARGETS decode_kernels prefill_kernels
+      EXPORT libflashinferTargets
+      COMPONENT Kernels
+      ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+      LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+      RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+      INCLUDES
+      DESTINATION ${_FLASHINFER_INCLUDE_INSTALL_DIR})
+
+    # Export targets from the build tree
+    export(
+      EXPORT libflashinferTargets
+      FILE "${CMAKE_CURRENT_BINARY_DIR}/libflashinferTargets.cmake"
+      NAMESPACE flashinfer::)
+
+    # Install the export set
     install(
       EXPORT libflashinferTargets
       FILE libflashinferTargets.cmake
@@ -142,16 +140,6 @@ if(FLASHINFER_BUILD_KERNELS
       DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/flashinfer
       COMPONENT Kernels)
   endif()
-endif()
-
-# Install libraries if kernels are built
-if(FLASHINFER_BUILD_KERNELS AND NOT FLASHINFER_BUILD_WHEELS)
-  # Only install libraries when NOT building wheels
-  install(
-    TARGETS decode_kernels prefill_kernels
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Kernels)
 endif()
 
 # Compile Flash Attention 3 libraries if FP8 unit tests are enabled
