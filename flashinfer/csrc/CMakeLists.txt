@@ -127,4 +127,12 @@ if(FLASHINFER_ENABLE_SM90 AND KERNEL_SM90_SOURCES)
   install(TARGETS flashinfer_kernels_sm90 DESTINATION flashinfer)
 endif()
 
+# Configure aot_config.py
+configure_file("${CMAKE_SOURCE_DIR}/templates/aot_config.py.in"
+               "${CMAKE_CURRENT_BINARY_DIR}/flashinfer/jit/aot_config.py" @ONLY)
+
+# Install aot config
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/flashinfer/jit/aot_config.py"
+        DESTINATION "flashinfer/jit")
+
 message(STATUS "FlashInfer AOT PyTorch extensions configured")

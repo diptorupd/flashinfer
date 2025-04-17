@@ -36,4 +36,44 @@ foreach(file ${PYTHON_FILES})
   install(FILES ${file} DESTINATION ${rel_dir})
 endforeach()
 
+message(STATUS "Vendoring CUTLASS headers into package")
+
+# Extract the two include paths from CUTLASS_INCLUDE_DIRS defined in
+# Dependencies.cmake
+list(GET CUTLASS_INCLUDE_DIRS 0 CUTLASS_MAIN_INCLUDE_DIR)
+list(GET CUTLASS_INCLUDE_DIRS 1 CUTLASS_TOOLS_INCLUDE_DIR)
+
+# Install main CUTLASS headers
+install(
+  DIRECTORY "${CUTLASS_MAIN_INCLUDE_DIR}/"
+  DESTINATION "flashinfer/include/cutlass"
+  FILES_MATCHING
+  PATTERN "*.h"
+  PATTERN "*.hpp"
+  PATTERN "*.cuh"
+  PATTERN "*.inl")
+
+# Install CUTLASS tools headers
+install(
+  DIRECTORY "${CUTLASS_TOOLS_INCLUDE_DIR}/"
+  DESTINATION "flashinfer/include/cutlass_tools"
+  FILES_MATCHING
+  PATTERN "*.h"
+  PATTERN "*.hpp"
+  PATTERN "*.cuh"
+  PATTERN "*.inl")
+
+message(STATUS "Installing TVM bindings into package")
+
+# Install TVM binding files
+install(
+  DIRECTORY "${CMAKE_SOURCE_DIR}/tvm_binding/"
+  DESTINATION "flashinfer/tvm_binding"
+  FILES_MATCHING
+  PATTERN "*.py"
+  PATTERN "*.cc"
+  PATTERN "*.cu"
+  PATTERN "*.h"
+  PATTERN "*.cuh")
+
 message(STATUS "flashinfer Python package configured")

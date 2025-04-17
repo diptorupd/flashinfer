@@ -145,9 +145,6 @@ function(_add_torch_extension)
   # Set up Python module naming conventions (no lib prefix)
   set_target_properties(${arg_EXT_NAME} PROPERTIES PREFIX "")
 
-  # Install the extension to the correct location
-  install(TARGETS ${arg_EXT_NAME} DESTINATION .)
-
 endfunction()
 
 #[=======================================================================[.rst:
