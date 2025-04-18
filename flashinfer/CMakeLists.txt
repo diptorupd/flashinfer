@@ -36,7 +36,8 @@ foreach(file ${PYTHON_FILES})
   install(FILES ${file} DESTINATION ${rel_dir})
 endforeach()
 
-message(STATUS "Vendoring CUTLASS headers into package")
+message(STATUS "Vendored CUTLASS headers to be installed along with package "
+               "at ${SKBUILD_PLATLIB_DIR}/flashinfer/include")
 
 # Extract the two include paths from CUTLASS_INCLUDE_DIRS defined in
 # Dependencies.cmake
@@ -63,7 +64,8 @@ install(
   PATTERN "*.cuh"
   PATTERN "*.inl")
 
-message(STATUS "Installing TVM bindings into package")
+message(STATUS "TVM bindings to be installed along with package at "
+               "${SKBUILD_PLATLIB_DIR}/flashinfer/tvm_binding")
 
 # Install TVM binding files
 install(
