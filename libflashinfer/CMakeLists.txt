@@ -101,6 +101,9 @@ flashinfer_generate_config_header(
 if(FLASHINFER_BUILD_KERNELS
    OR FLASHINFER_UNITTESTS
    OR FLASHINFER_CXX_BENCHMARKS)
+
+  set(FLASHINFER_KERNEL_TARGETS decode_kernels prefill_kernels)
+
   add_library(decode_kernels STATIC ${DECODE_KERNELS_SRCS})
   add_library(flashinfer::decode_kernels ALIAS decode_kernels)
   target_include_directories(decode_kernels PRIVATE ${FLASHINFER_INCLUDE_DIR})
@@ -115,10 +118,25 @@ if(FLASHINFER_BUILD_KERNELS
     target_link_libraries(prefill_kernels PRIVATE Boost::math)
   endif()
 
+  if(FLASHINFER_ENABLE_SM90)
+    list(APPEND FLASHINFER_KERNEL_TARGETS prefill_kernels_sm90)
+    add_library(prefill_kernels_sm90 STATIC ${PREFILL_KERNELS_SM90_SRCS})
+    add_library(flashinfer::prefill_kernels_sm90 ALIAS prefill_kernels_sm90)
+    target_include_directories(prefill_kernels_sm90
+                               PRIVATE ${FLASHINFER_INCLUDE_DIR})
+    target_compile_options(
+      prefill_kernels_sm90
+      PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:
+              --generate-code=arch=compute_90a,code=sm_90a>)
+    if(FLASHINFER_GEN_USE_FP16_QK_REDUCTIONS)
+      target_link_libraries(prefill_kernels_sm90 PRIVATE Boost::math)
+    endif()
+  endif()
+
   # Only for non-wheel builds: Install libraries and export targets
   if(NOT FLASHINFER_BUILD_WHEELS)
     install(
-      TARGETS decode_kernels prefill_kernels
+      TARGETS ${FLASHINFER_KERNEL_TARGETS}
       EXPORT libflashinferTargets
       COMPONENT Kernels
       ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}

@@ -92,6 +92,8 @@ endif()
 
 include(GNUInstallDirs)
 
+include(ConfigureCUDAArchitectures)
+
 # Include consolidated option definitions
 include(cmake/Options.cmake)
 
@@ -100,6 +102,17 @@ include(cmake/Dependencies.cmake)
 
 # Define components for build and installation
 include(cmake/Components.cmake)
+
+# Validate that FLASHINFER_CUDA_ARCHITECTURES contains only supported values.
+# Only SM75 and later are supported.
+set(FLASHINFER_MINIMUM_SUPPORTED_CUDA_ARCH 75)
+validate_arch_list_against_min_supported_arch(
+  FLASHINFER_CUDA_ARCHITECTURES FLASHINFER_MINIMUM_SUPPORTED_CUDA_ARCH)
+
+# Update the FLASHINFER_NVCC_FLAGS with the gencode flags based on the
+# FLASHINFER_CUDA_ARCHITECTURES list.
+generate_cuda_arch_flags("${FLASHINFER_CUDA_ARCHITECTURES}" cuda_arch_flags)
+list(APPEND FLASHINFER_NVCC_FLAGS ${cuda_arch_flags})
 
 # Add library subdirectories
 add_subdirectory(libflashinfer)

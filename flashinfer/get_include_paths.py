@@ -3,6 +3,7 @@
 # SPDX - License - Identifier : Apache - 2.0
 
 import os
+import pathlib
 from sysconfig import get_path
 
 
@@ -28,9 +29,8 @@ def get_include():
     Returns
     -------
     include_dir : str
-        Path to flashinfer's CUDA header files.
+        Path to libflashinfer and Cutlass header files.
     """
-
     include_dir = os.path.join(_get_package_root_dir(), "include")
     return str(include_dir)
 
@@ -48,12 +48,12 @@ def get_tvm_binding_dir():
 
 
 def get_csrc_dir():
-    """Return the directory containing the C++/CUDA source files.
+    """Return the directory containing the C++/CUDA source files used by jit.
 
     Returns
     -------
     csrc_dir : str
-        Path to flashinfer's C++ source files.
+        Path to flashinfer's C++/CUDA source files.
     """
-    csrc_dir = os.path.join(_get_package_root_dir(), "csrc")
+    csrc_dir = pathlib.Path(__file__).parent / "csrc"
     return str(csrc_dir)

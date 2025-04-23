@@ -24,7 +24,14 @@ enable_f16 = @enable_f16@
 enable_bf16 = @enable_bf16@
 enable_fp8_e4m3 = @enable_fp8_e4m3@
 enable_fp8_e5m2 = @enable_fp8_e5m2@
-cuda_architectures = "@CMAKE_CUDA_ARCHITECTURES@"
+
+# Architecture options
+min_cuda_arch = @min_cuda_arch@
+enable_sm90_optimizations = @enable_sm90_optimizations@
+
+# AOT extension information
+aot_torch_exts_cuda = @aot_torch_exts_cuda@
+aot_torch_exts_cuda_archs = @aot_torch_exts_cuda_archs@
 
 # Torch information (only if AOT extensions were built)
 @TORCH_INFO_BLOCK@
@@ -41,7 +48,10 @@ _info: Dict[str, Any] = {
     'enable_bf16': enable_bf16,
     'enable_fp8_e4m3': enable_fp8_e4m3,
     'enable_fp8_e5m2': enable_fp8_e5m2,
-    'cuda_architectures': cuda_architectures,
+    'min_cuda_arch': min_cuda_arch,
+    'enable_sm90_optimizations': enable_sm90_optimizations,
+    'aot_torch_exts_cuda': aot_torch_exts_cuda,
+    'aot_torch_exts_cuda_archs': aot_torch_exts_cuda_archs,
     @INFO_DICT_ENTRIES@
 }
 

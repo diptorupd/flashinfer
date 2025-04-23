@@ -11,30 +11,10 @@ file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/flashinfer")
 
 message(STATUS "Python package version set to: ${PROJECT_VERSION_FULL}")
 
-# Prepare conditional template variables
-set(TORCH_VERSION_ENTRY "")
-if(DEFINED Torch_VERSION)
-  set(TORCH_VERSION_ENTRY "\"torch\": \"${Torch_VERSION}\",")
-endif()
-
-set(CUDA_ARCH_ENTRY "")
-if(CMAKE_CUDA_ARCHITECTURES)
-  set(CUDA_ARCH_ENTRY
-      "\"cuda_architectures\": \"${CMAKE_CUDA_ARCHITECTURES}\",")
-endif()
-
 # Generate unified configuration file
 include(GenerateConfigPython)
 
 flashinfer_generate_config_python(INSTALL_DIR "flashinfer")
-
-# Install Python files
-file(GLOB_RECURSE PYTHON_FILES "${CMAKE_CURRENT_SOURCE_DIR}/flashinfer/*.py")
-foreach(file ${PYTHON_FILES})
-  file(RELATIVE_PATH rel_path ${CMAKE_CURRENT_SOURCE_DIR} ${file})
-  get_filename_component(rel_dir ${rel_path} DIRECTORY)
-  install(FILES ${file} DESTINATION ${rel_dir})
-endforeach()
 
 message(STATUS "Vendored CUTLASS headers to be installed along with package "
                "at ${SKBUILD_PLATLIB_DIR}/flashinfer/include")

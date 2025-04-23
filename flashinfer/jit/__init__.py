@@ -72,7 +72,7 @@ try:
     from .. import flashinfer_kernels  # noqa: F401
     from .. import __config__
 
-    if __config__.get_info("enable_sm90"):
+    if __config__.aot_torch_exts_cuda and 90 in __config__.aot_torch_exts_cuda_archs:
         try:
             from .. import flashinfer_kernels_sm90  # noqa: F401
         except ImportError:

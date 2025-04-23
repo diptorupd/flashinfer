@@ -56,6 +56,7 @@ flashinfer_option(FLASHINFER_FP8_BENCHMARKS "Build FP8 benchmarks" OFF)
 
 # === ARCHITECTURE OPTIONS ===
 flashinfer_option(FLASHINFER_CUDA_ARCHITECTURES "CUDA architectures to compile for" "")
+flashinfer_option(FLASHINFER_MIN_CUDA_ARCH "Minimum CUDA architecture required (SM_XX)" 75)
 
 # === PATH OPTIONS ===
 flashinfer_option(FLASHINFER_CUTLASS_DIR "Path to CUTLASS installation" "")
@@ -67,14 +68,30 @@ flashinfer_option(FLASHINFER_USE_CXX11_ABI "Use the C++11 ABI for PyTorch compat
 
 # === PYTHON OPTIONS ===
 flashinfer_option(FLASHINFER_PY_LIMITED_API "Use Python's limited API for better version compatibility" ON)
-flashinfer_option(FLASHINFER_MIN_PYTHON_ABI "Minimum Python ABI version for limited API compatibility" "3.8")
+flashinfer_option(FLASHINFER_MIN_PYTHON_ABI "Minimum Python ABI version for limited API compatibility" "3.9")
 
 # === AUTO-DERIVED OPTIONS ===
 # Handle CUDA architectures
 if(FLASHINFER_CUDA_ARCHITECTURES)
   message(STATUS "CMAKE_CUDA_ARCHITECTURES set to ${FLASHINFER_CUDA_ARCHITECTURES}.")
-  set(CMAKE_CUDA_ARCHITECTURES ${FLASHINFER_CUDA_ARCHITECTURES})
+else()
+  # No user-provided architectures, try to detect the CUDA archs based on where
+  # the project is being built
+  set(detected_archs "")
+  detect_cuda_architectures(detected_archs)
+  if(detected_archs)
+    set(FLASHINFER_CUDA_ARCHITECTURES ${detected_archs} CACHE STRING
+        "CUDA architectures" FORCE)
+    message(STATUS "Setting FLASHINFER_CUDA_ARCHITECTURES to detected values: ${FLASHINFER_CUDA_ARCHITECTURES}")
+  else()
+    # No architectures detected, use safe defaults
+    set(FLASHINFER_CUDA_ARCHITECTURES "75;80;86" CACHE STRING
+        "CUDA architectures to compile for" FORCE)
+    message(STATUS "No architectures detected, using defaults: ${FLASHINFER_CUDA_ARCHITECTURES}")
+  endif()
 endif()
+
+set(CMAKE_CUDA_ARCHITECTURES ${FLASHINFER_CUDA_ARCHITECTURES})
 
 # Derive SM90 support automatically from CUDA architectures
 set(FLASHINFER_ENABLE_SM90 OFF CACHE INTERNAL "SM90 architecture support enabled")

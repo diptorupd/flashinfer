@@ -107,8 +107,17 @@ function(flashinfer_generate_config_python)
   string(APPEND SYS_INFO_BLOCK "system = platform.system()\n")
   string(APPEND SYS_INFO_BLOCK "python_version = platform.python_version()\n")
 
+  # Architecture options
+  set(min_supported_cuda_arch ${FLASHINFER_MIN_CUDA_ARCH})
+  set(enable_sm90_optimizations "False")
+  if(FLASHINFER_ENABLE_SM90)
+    set(enable_sm90_optimizations "True")
+  endif()
+
   # Torch info block if AOT enabled
   set(TORCH_INFO_BLOCK "# No PyTorch information available")
+  set(aot_torch_exts_cuda "False")
+  set(aot_torch_exts_cuda_archs "[]") # Default empty list
   if(FLASHINFER_AOT_TORCH_EXTS_CUDA)
     set(TORCH_INFO_BLOCK "import torch\n")
     string(APPEND TORCH_INFO_BLOCK "torch_version = torch.__version__\n")
@@ -117,6 +126,44 @@ function(flashinfer_generate_config_python)
     # Add to info dict
     list(APPEND INFO_DICT_ENTRIES "'torch_version': torch_version,")
     list(APPEND INFO_DICT_ENTRIES "'cuda_version': cuda_version,")
+    list(APPEND INFO_DICT_ENTRIES "'aot_torch_exts_cuda': True,")
+
+    # Format CUDA architectures as a Python list
+    if(FLASHINFER_CUDA_ARCHITECTURES)
+      set(CLEAN_ARCHS "")
+      foreach(arch ${FLASHINFER_CUDA_ARCHITECTURES})
+        string(REGEX MATCH "^[0-9]+" arch_num "${arch}")
+        list(APPEND CLEAN_ARCHS ${arch_num})
+      endforeach()
+
+      list(REMOVE_DUPLICATES CLEAN_ARCHS)
+      list(SORT CLEAN_ARCHS)
+
+      string(REPLACE ";" ", " CUDA_ARCHS_STR "${CLEAN_ARCHS}")
+      set(aot_torch_exts_cuda_archs "[${CUDA_ARCHS_STR}]")
+      message(STATUS "AOT CUDA architectures: ${aot_torch_exts_cuda_archs}")
+    endif()
+
+    message(
+      STATUS
+        "Final aot_torch_exts_cuda_archs value: ${aot_torch_exts_cuda_archs}")
+
+    # Add specific SM90 information since that's especially relevant for
+    # FlashInfer
+    if(FLASHINFER_ENABLE_SM90)
+      list(APPEND INFO_DICT_ENTRIES "'aot_torch_exts_cuda_sm90': True,")
+      # Include the special SM90 head dimensions if available
+      if(HEAD_DIMS_SM90)
+        string(REPLACE ";" ", " SM90_HEAD_DIMS_STR "${HEAD_DIMS_SM90}")
+        list(APPEND INFO_DICT_ENTRIES
+             "'aot_sm90_head_dims': [${SM90_HEAD_DIMS_STR}],")
+      endif()
+    else()
+      list(APPEND INFO_DICT_ENTRIES "'aot_torch_exts_cuda_sm90': False,")
+    endif()
+  else()
+    list(APPEND INFO_DICT_ENTRIES "'aot_torch_exts_cuda': False,")
+    list(APPEND INFO_DICT_ENTRIES "'aot_torch_exts_cuda_sm90': False,")
   endif()
 
   # Process each variable
@@ -128,17 +175,15 @@ function(flashinfer_generate_config_python)
       # Convert C++ variable name to Python (FLASHINFER_X_Y -> x_y)
       string(REPLACE "FLASHINFER_" "" _py_var "${_var}")
       string(TOLOWER "${_py_var}" _py_var)
-
-      message(STATUS "Orignal Var : ${_var} : ${_value}")
-      message(STATUS "Pythonized : ${_py_var} : ${_py_value}")
-
       set(${_py_var} ${_py_value})
 
-      # Add to info dict if not already declared at the top
+      # Add to info dict if not already declared at the top or for the ones we
+      # want to exlcude like `enable_sm90`
       if(NOT _py_var STREQUAL "enable_f16"
          AND NOT _py_var STREQUAL "enable_bf16"
          AND NOT _py_var STREQUAL "enable_fp8_e4m3"
-         AND NOT _py_var STREQUAL "enable_fp8_e5m2")
+         AND NOT _py_var STREQUAL "enable_fp8_e5m2"
+         AND NOT _py_var STREQUAL "enable_sm90")
         list(APPEND INFO_DICT_ENTRIES "'${_py_var}': ${_py_value},")
       endif()
     endif()
@@ -157,6 +202,11 @@ function(flashinfer_generate_config_python)
   if(NOT GIT_HASH)
     set(GIT_HASH "unknown")
   endif()
+
+  # Debug output for final config variables
+  message(STATUS "Final config variables:")
+  message(STATUS "  aot_torch_exts_cuda = ${aot_torch_exts_cuda}")
+  message(STATUS "  aot_torch_exts_cuda_archs = ${aot_torch_exts_cuda_archs}")
 
   # Configure the template
   configure_file("${ARG_TEMPLATE_FILE}" "${ARG_OUTPUT_FILE}" @ONLY)

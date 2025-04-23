@@ -19,7 +19,8 @@ file(
   "${CMAKE_CURRENT_SOURCE_DIR}/batch_prefill.cu"
   "${CMAKE_CURRENT_SOURCE_DIR}/single_decode.cu"
   "${CMAKE_CURRENT_SOURCE_DIR}/single_prefill.cu"
-  "${CMAKE_CURRENT_SOURCE_DIR}/flashinfer_ops.cu")
+  "${CMAKE_CURRENT_SOURCE_DIR}/flashinfer_ops.cu",
+  "${CMAKE_CURRENT_SOURCE_DIR}/custom_all_reduce.cu")
 
 # SM90-specific sources
 file(
@@ -28,7 +29,13 @@ file(
   "${CMAKE_CURRENT_SOURCE_DIR}/group_gemm_sm90.cu"
   "${CMAKE_CURRENT_SOURCE_DIR}/single_prefill_sm90.cu"
   "${CMAKE_CURRENT_SOURCE_DIR}/batch_prefill_sm90.cu"
-  "${CMAKE_CURRENT_SOURCE_DIR}/flashinfer_ops_sm90.cu")
+  "${CMAKE_CURRENT_SOURCE_DIR}/flashinfer_ops_sm90.cu"
+  "${CMAKE_CURRENT_SOURCE_DIR}/group_gemm_f16_f16_sm90.cu",
+  "${CMAKE_CURRENT_SOURCE_DIR}/group_gemm_bf16_bf16_sm90.cu",
+  "${CMAKE_CURRENT_SOURCE_DIR}/group_gemm_e4m3_f16_sm90.cu",
+  "${CMAKE_CURRENT_SOURCE_DIR}/group_gemm_e5m2_f16_sm90.cu",
+  "${CMAKE_CURRENT_SOURCE_DIR}/group_gemm_e4m3_bf16_sm90.cu",
+  "${CMAKE_CURRENT_SOURCE_DIR}/group_gemm_e5m2_bf16_sm90.cu")
 
 # Find generated source files
 file(GLOB DECODE_SOURCES "${FLASHINFER_GENERATED_SOURCE_DIR}/*decode_head*.cu")
@@ -65,8 +72,6 @@ add_cuda_torch_extension(
   EXT_NAME flashinfer_kernels
   SOURCES
     ${KERNEL_SOURCES}
-    ${DECODE_SOURCES}
-    ${PREFILL_SOURCES}
   INCLUDE_DIRS
     ${COMMON_INCLUDE_DIRS}
   LINK_LIBS
@@ -77,8 +82,8 @@ add_cuda_torch_extension(
     $<$<COMPILE_LANGUAGE:CXX>:-Wno-switch-bool>
     $<$<COMPILE_LANGUAGE:CUDA>:${TORCH_EXT_NVCC_FLAGS}>
     $<$<BOOL:${CXX11_ABI_DEF}>:-D${CXX11_ABI_DEF}>
-  PY_LIMITED_API
-  MIN_PYTHON_ABI "3.8"
+  PY_LIMITED_API ${FLASHINFER_PY_LIMITED_API}
+  MIN_PYTHON_ABI "${FLASHINFER_MIN_PYTHON_ABI}"
 )
 # cmake-format: on
 
@@ -100,13 +105,11 @@ if(FLASHINFER_ENABLE_SM90 AND KERNEL_SM90_SOURCES)
     EXT_NAME flashinfer_kernels_sm90
     SOURCES
       ${KERNEL_SM90_SOURCES}
-      ${PREFILL_SM90_SOURCES}
     INCLUDE_DIRS
       ${COMMON_INCLUDE_DIRS}
     LINK_LIBS
       ${COMMON_LIBS}
-      $<$<TARGET_EXISTS:flashinfer::decode_kernels>:flashinfer::decode_kernels>
-      $<$<TARGET_EXISTS:flashinfer::prefill_kernels>:flashinfer::prefill_kernels>
+      $<$<TARGET_EXISTS:flashinfer::prefill_kernels_sm90>:flashinfer::prefill_kernels_sm90>
     COMPILE_FLAGS
       $<$<COMPILE_LANGUAGE:CXX>:-Wno-switch-bool>
       $<$<COMPILE_LANGUAGE:CUDA>:${TORCH_EXT_NVCC_FLAGS}

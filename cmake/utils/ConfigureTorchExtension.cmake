@@ -104,7 +104,11 @@ function(_add_torch_extension)
     target_compile_options(${arg_EXT_NAME} PRIVATE ${arg_COMPILE_FLAGS})
   endif()
 
-  # Add the EXACT same defines as the original build
+  set(CXX11_ABI 0)
+  if(FLASHINFER_USE_CXX11_ABI)
+    set(CXX11_ABI 1)
+  endif()
+
   target_compile_definitions(
     ${arg_EXT_NAME}
     PRIVATE TORCH_EXTENSION_NAME=${arg_EXT_NAME}
@@ -113,10 +117,8 @@ function(_add_torch_extension)
             PYBIND11_BUILD_ABI="_cxxabi1011"
             NDEBUG
             TORCH_API_INCLUDE_EXTENSION_H
-            _GLIBCXX_USE_CXX11_ABI=0) # FIXME: Make this configurable, just for
-                                      # testing
+            _GLIBCXX_USE_CXX11_ABI=${CXX11_ABI})
 
-  # Set proper ABI3 extension suffix for limited API
   if(arg_PY_LIMITED_API)
     set_target_properties(
       ${arg_EXT_NAME} PROPERTIES SUFFIX ".abi3${CMAKE_SHARED_MODULE_SUFFIX}")
@@ -215,7 +217,7 @@ function(add_cuda_torch_extension)
   set(multiValueArgs
       SOURCES
       LINK_LIBS
-      DLINK_LIBS # Keep DLINK parameters here
+      DLINK_LIBS
       LINK_LIB_DIRS
       DLINK_LIB_DIRS
       COMPILE_FLAGS
@@ -257,24 +259,18 @@ function(add_cuda_torch_extension)
   endif()
 
   # Create the extension first
+  # cmake-format: off
   _add_torch_extension(
-    EXT_NAME
-    ${arg_EXT_NAME}
-    SOURCES
-    ${arg_SOURCES}
-    LINK_LIBS
-    ${arg_LINK_LIBS}
-    LINK_LIB_DIRS
-    ${arg_LINK_LIB_DIRS}
-    COMPILE_FLAGS
-    ${arg_COMPILE_FLAGS}
-    INCLUDE_DIRS
-    ${arg_INCLUDE_DIRS}
-    MIN_PYTHON_ABI
-    ${arg_MIN_PYTHON_ABI}
-    PY_LIMITED_API
-    ${arg_PY_LIMITED_API})
-
+    EXT_NAME ${arg_EXT_NAME}
+    SOURCES ${arg_SOURCES}
+    LINK_LIBS ${arg_LINK_LIBS}
+    LINK_LIB_DIRS ${arg_LINK_LIB_DIRS}
+    COMPILE_FLAGS ${arg_COMPILE_FLAGS}
+    INCLUDE_DIRS ${arg_INCLUDE_DIRS}
+    MIN_PYTHON_ABI ${arg_MIN_PYTHON_ABI}
+    PY_LIMITED_API ${arg_PY_LIMITED_API}
+  )
+  # cmake-format: on
   # Handle device link time optimization (moved from helper function)
   if(arg_DLINK OR DEFINED arg_DLINK_LIBS)
     set(DLINK_FLAGS "-dlink")

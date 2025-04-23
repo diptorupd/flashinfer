@@ -33,6 +33,7 @@ requires = [
 build-backend = "scikit_build_core.build"
 
 [tool.scikit-build]
+editable.rebuild = true
 build.verbose = true
 logging.level = "INFO"
 build-dir = "_skbuild"
