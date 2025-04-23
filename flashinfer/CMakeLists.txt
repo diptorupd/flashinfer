@@ -1,8 +1,8 @@
 # Top-level Python package configuration
 
-# If building AOT PyTorch CUDA extensions
-if(FLASHINFER_AOT_TORCH_EXTS_CUDA)
-  message(STATUS "Building AOT PyTorch CUDA extensions")
+# If building AOT PyTorch CUDA/HIP extensions
+if(FLASHINFER_AOT_TORCH_EXTS_CUDA OR FLASHINFER_AOT_TORCH_EXTS_HIP)
+  message(STATUS "Building AOT PyTorch extensions")
   add_subdirectory(csrc)
 endif()
 
@@ -19,10 +19,10 @@ flashinfer_generate_config_python(INSTALL_DIR "flashinfer")
 message(STATUS "Vendored CUTLASS headers to be installed along with package "
                "at flashinfer/include")
 
-# Extract the two include paths from CUTLASS_INCLUDE_DIRS defined in
-# Dependencies.cmake
-list(GET CUTLASS_INCLUDE_DIRS 0 CUTLASS_MAIN_INCLUDE_DIR)
-list(GET CUTLASS_INCLUDE_DIRS 1 CUTLASS_TOOLS_INCLUDE_DIR)
+  # Extract the two include paths from CUTLASS_INCLUDE_DIRS defined in
+  # Dependencies.cmake
+  list(GET CUTLASS_INCLUDE_DIRS 0 CUTLASS_MAIN_INCLUDE_DIR)
+  list(GET CUTLASS_INCLUDE_DIRS 1 CUTLASS_TOOLS_INCLUDE_DIR)
 
 # Install main CUTLASS and CUTE headers
 install(

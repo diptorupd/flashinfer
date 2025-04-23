@@ -5,6 +5,8 @@ set(CMAKE_MODULE_PATH
     ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules"
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/utils")
 
+set(CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/utils")
+
 # Include versioning and utilities
 include(ProjectVersion)
 include(Utils)
@@ -13,11 +15,10 @@ set_current_release()
 
 project(
   flashinfer
-  LANGUAGES CUDA CXX
+  LANGUAGES CXX
   VERSION ${PROJECT_VERSION}
   DESCRIPTION "Fast Attention Algorithms for LLM Inference")
 
-set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CUDA_STANDARD 20)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -60,14 +61,6 @@ set(SECURITY_FLAGS
     "-fno-delete-null-pointer-checks"
     "-fwrapv")
 
-set(FLASHINFER_NVCC_FLAGS
-    "-O3"
-    "--threads=1"
-    "-Xfatbin=-compress-all"
-    "-use_fast_math"
-    "--expt-relaxed-constexpr"
-    "-lineinfo"
-    "-Xptxas=-v")
 # cmake-format: on
 
 # Join the lists with spaces to form the flag strings
@@ -92,8 +85,6 @@ endif()
 
 include(GNUInstallDirs)
 
-include(ConfigureCUDAArchitectures)
-
 # Include consolidated option definitions
 include(cmake/Options.cmake)
 
@@ -103,16 +94,62 @@ include(cmake/Dependencies.cmake)
 # Define components for build and installation
 include(cmake/Components.cmake)
 
-# Validate that FLASHINFER_CUDA_ARCHITECTURES contains only supported values.
-# Only SM75 and later are supported.
-set(FLASHINFER_MINIMUM_SUPPORTED_CUDA_ARCH 75)
-validate_arch_list_against_min_supported_arch(
-  FLASHINFER_CUDA_ARCHITECTURES FLASHINFER_MINIMUM_SUPPORTED_CUDA_ARCH)
+if(FLASHINFER_ENABLE_CUDA)
+  enable_language(CUDA)
+  set(CMAKE_CXX_STANDARD 20)
+  message(STATUS "CUDA language enabled")
+  include(ConfigureCUDAArchitectures)
 
-# Update the FLASHINFER_NVCC_FLAGS with the gencode flags based on the
-# FLASHINFER_CUDA_ARCHITECTURES list.
-generate_cuda_arch_flags("${FLASHINFER_CUDA_ARCHITECTURES}" cuda_arch_flags)
-list(APPEND FLASHINFER_NVCC_FLAGS ${cuda_arch_flags})
+  # cmake-format: off
+  set(FLASHINFER_NVCC_FLAGS
+    "-O3"
+    "--threads=1"
+    "-Xfatbin=-compress-all"
+    "-use_fast_math"
+    "--expt-relaxed-constexpr"
+    "-lineinfo"
+    "-Xptxas=-v")
+  # cmake-format: on
+
+  # Validate that FLASHINFER_CUDA_ARCHITECTURES contains only supported values.
+  # Only SM75 and later are supported.
+  set(FLASHINFER_MINIMUM_SUPPORTED_CUDA_ARCH 75)
+  validate_arch_list_against_min_supported_arch(
+    FLASHINFER_CUDA_ARCHITECTURES FLASHINFER_MINIMUM_SUPPORTED_CUDA_ARCH)
+
+  # Update the FLASHINFER_NVCC_FLAGS with the gencode flags based on the
+  # FLASHINFER_CUDA_ARCHITECTURES list.
+  generate_cuda_arch_flags("${FLASHINFER_CUDA_ARCHITECTURES}" cuda_arch_flags)
+  list(APPEND FLASHINFER_NVCC_FLAGS ${cuda_arch_flags})
+endif()
+
+if(FLASHINFER_ENABLE_HIP)
+  enable_language(HIP)
+  message(STATUS "HIP language enabled")
+  include(ConfigureHIPArchitectures)
+
+  set(FLASHINFER_HIPCC_FLAGS "-O3" "-ffast-math" "-Wno-deprecated-declarations")
+
+  # Validate that FLASHINFER_HIP_ARCHITECTURES contains only supported values.
+  # Only gfx942 is supported for now.
+  set(FLASHINFER_SUPPORTED_HIP_ARCH "gfx942")
+
+  foreach(arch ${FLASHINFER_HIP_ARCHITECTURES})
+    if(NOT arch IN_LIST FLASHINFER_SUPPORTED_HIP_ARCH)
+      message(
+        FATAL_ERROR
+          "Unsupported HIP architecture: ${arch} only gfx942 is supported")
+    endif()
+  endforeach()
+
+  # Generate HIP arch flags
+  generate_hip_arch_flags("${FLASHINFER_HIP_ARCHITECTURES}" hip_arch_flags)
+  message(STATUS "HIP architecture flags: ${hip_arch_flags}")
+
+  foreach(flag ${hip_arch_flags})
+    list(APPEND FLASHINFER_HIPCC_FLAGS ${flag})
+  endforeach()
+endif()
 
 # Add library subdirectories
 add_subdirectory(libflashinfer)
