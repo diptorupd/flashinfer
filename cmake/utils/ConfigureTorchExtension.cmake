@@ -340,11 +340,11 @@ endfunction()
     across Python versions. When enabled, torch_python is not linked.
 
   ``MIN_PYTHON_ABI``
-    Minimum Python version for limited API compatibility (default: "3.8").
+    Minimum Python version for limited API compatibility (default: "3.9").
     Only relevant when PY_LIMITED_API is set.
 #]=======================================================================]
 function(add_hip_torch_extension)
-  set(options PY_LIMITED_API) # Removed DLINK from here
+  set(options PY_LIMITED_API)
   set(oneValueArgs EXT_NAME MIN_PYTHON_ABI)
   set(multiValueArgs SOURCES LINK_LIBS LINK_LIB_DIRS COMPILE_FLAGS INCLUDE_DIRS)
 
@@ -365,21 +365,16 @@ function(add_hip_torch_extension)
     set(arg_PY_LIMITED_API OFF)
   endif()
 
+  # cmake-format: off
   _add_torch_extension(
-    EXT_NAME
-    ${arg_EXT_NAME}
-    SOURCES
-    ${arg_SOURCES}
-    LINK_LIBS
-    ${arg_LINK_LIBS}
-    LINK_LIB_DIRS
-    ${arg_LINK_LIB_DIRS}
-    COMPILE_FLAGS
-    ${arg_COMPILE_FLAGS}
-    INCLUDE_DIRS
-    ${arg_INCLUDE_DIRS}
-    MIN_PYTHON_ABI
-    ${arg_MIN_PYTHON_ABI}
-    PY_LIMITED_API
-    ${arg_PY_LIMITED_API})
+    EXT_NAME ${arg_EXT_NAME}
+    SOURCES ${arg_SOURCES}
+    LINK_LIBS ${arg_LINK_LIBS}
+    LINK_LIB_DIRS ${arg_LINK_LIB_DIRS}
+    COMPILE_FLAGS ${arg_COMPILE_FLAGS}
+    INCLUDE_DIRS ${arg_INCLUDE_DIRS}
+    MIN_PYTHON_ABI ${arg_MIN_PYTHON_ABI}
+    PY_LIMITED_API ${arg_PY_LIMITED_API}
+  )
+  # cmake-format: on
 endfunction()
