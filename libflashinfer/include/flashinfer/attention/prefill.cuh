@@ -16,19 +16,22 @@
 #ifndef FLASHINFER_PREFILL_CUH_
 #define FLASHINFER_PREFILL_CUH_
 
-#include <cooperative_groups.h>
+#if defined(PLATFORM_CUDA_DEVICE)
 #include <cuda_bf16.h>
 #include <cuda_fp16.h>
 #include <cuda_fp8.h>
-#include <cuda_runtime.h>
+#elif defined(PLATFORM_HIP_DEVICE)
+#include <hip/hip_bf16.h>
+#include <hip/hip_fp16.h>
+#include <hip/hip_fp8.h>
+#endif
 
-#include "../cp_async.cuh"
 #include "../fastdiv.cuh"
 #ifdef FP16_QK_REDUCTION_SUPPORTED
 #include "../fp16.h"
 #endif
 #include "../frag_layout_swizzle.cuh"
-#include "../math.cuh"
+
 #include "../mma.cuh"
 #include "../page.cuh"
 #include "../permuted_smem.cuh"
@@ -37,17 +40,24 @@
 #include "cascade.cuh"
 #include "mask.cuh"
 #include "variants.cuh"
+
+#include "../../gpu_iface/cooperative_groups.h"
+#include "../../gpu_iface/math_ops.hpp"
+#include "../../gpu_iface/memory_ops.hpp"
+#include "../../gpu_iface/platform.hpp"
+
 namespace flashinfer
 {
 
 DEFINE_HAS_MEMBER(maybe_q_rope_offset)
 DEFINE_HAS_MEMBER(maybe_k_rope_offset)
 
-namespace cg = cooperative_groups;
-using cp_async::SharedMemFillMode;
+namespace cg = flashinfer::gpu_iface::cg;
+namespace memory = flashinfer::gpu_iface::memory;
+
 using mma::MMAMode;
 
-constexpr uint32_t WARP_SIZE = 32;
+constexpr uint32_t WARP_SIZE = gpu_iface::kWarpSize;
 
 constexpr uint32_t get_num_warps_q(const uint32_t cta_tile_q)
 {
@@ -189,10 +199,11 @@ struct KernelTraits
     template <typename DT> static constexpr DT getNegInf()
     {
         if constexpr (std::is_same<DT, __half>::value) {
-            return std::bit_cast<half>(fp16_ieee_from_fp32_value(-math::inf));
+            return std::bit_cast<half>(
+                fp16_ieee_from_fp32_value(-gpu_iface::math::inf));
         }
         else {
-            return static_cast<DTypeQKAccum>(-math::inf);
+            return static_cast<DTypeQKAccum>(-gpu_iface::math::inf);
         }
     }
 
@@ -203,9 +214,9 @@ struct KernelTraits
     static_assert(!std::is_same<DTypeQKAccum, __half>::value,
                   "Set -DFP16_QK_REDUCTION_SUPPORTED and install boost_math "
                   "then recompile to support fp16 reduction");
-    static constexpr DTypeQKAccum MaskFillValue = AttentionVariant::use_softmax
-                                                      ? DTypeQKAccum(-math::inf)
-                                                      : DTypeQKAccum(0.f);
+    static constexpr DTypeQKAccum MaskFillValue =
+        AttentionVariant::use_softmax ? DTypeQKAccum(-gpu_iface::math::inf)
+                                      : DTypeQKAccum(0.f);
 #endif
 };
 
@@ -528,7 +539,8 @@ init_states(typename KTraits::AttentionVariant variant,
         for (uint32_t mma_q = 0; mma_q < KTraits::NUM_MMA_Q; ++mma_q) {
 #pragma unroll
             for (uint32_t j = 0; j < 2; ++j) {
-                m[mma_q][j] = typename KTraits::DTypeQKAccum(-math::inf);
+                m[mma_q][j] =
+                    typename KTraits::DTypeQKAccum(-gpu_iface::math::inf);
                 d[mma_q][j] = 1.f;
             }
         }
@@ -1053,12 +1065,14 @@ __device__ __forceinline__ void update_mdo_states(
                         m[mma_q][j] = max(m[mma_q][j], m_local);
                     }
                     m[mma_q][j] =
-                        max(m[mma_q][j], math::shfl_xor_sync(m[mma_q][j], 0x2));
+                        max(m[mma_q][j],
+                            gpu_iface::math::shfl_xor_sync(m[mma_q][j], 0x2));
                     m[mma_q][j] =
-                        max(m[mma_q][j], math::shfl_xor_sync(m[mma_q][j], 0x1));
+                        max(m[mma_q][j],
+                            gpu_iface::math::shfl_xor_sync(m[mma_q][j], 0x1));
 
-                    float o_scale = math::ptx_exp2(m_prev * sm_scale -
-                                                   m[mma_q][j] * sm_scale);
+                    float o_scale = gpu_iface::math::ptx_exp2(
+                        m_prev * sm_scale - m[mma_q][j] * sm_scale);
                     d[mma_q][j] *= o_scale;
 #pragma unroll
                     for (uint32_t mma_d = 0; mma_d < KTraits::NUM_MMA_D_VO;
@@ -1073,18 +1087,22 @@ __device__ __forceinline__ void update_mdo_states(
                     for (uint32_t mma_kv = 0; mma_kv < KTraits::NUM_MMA_KV;
                          ++mma_kv)
                     {
-                        s_frag[mma_q][mma_kv][j * 2 + 0] = math::ptx_exp2(
-                            s_frag[mma_q][mma_kv][j * 2 + 0] * sm_scale -
-                            m[mma_q][j] * sm_scale);
-                        s_frag[mma_q][mma_kv][j * 2 + 1] = math::ptx_exp2(
-                            s_frag[mma_q][mma_kv][j * 2 + 1] * sm_scale -
-                            m[mma_q][j] * sm_scale);
-                        s_frag[mma_q][mma_kv][j * 2 + 4] = math::ptx_exp2(
-                            s_frag[mma_q][mma_kv][j * 2 + 4] * sm_scale -
-                            m[mma_q][j] * sm_scale);
-                        s_frag[mma_q][mma_kv][j * 2 + 5] = math::ptx_exp2(
-                            s_frag[mma_q][mma_kv][j * 2 + 5] * sm_scale -
-                            m[mma_q][j] * sm_scale);
+                        s_frag[mma_q][mma_kv][j * 2 + 0] =
+                            gpu_iface::math::ptx_exp2(
+                                s_frag[mma_q][mma_kv][j * 2 + 0] * sm_scale -
+                                m[mma_q][j] * sm_scale);
+                        s_frag[mma_q][mma_kv][j * 2 + 1] =
+                            gpu_iface::math::ptx_exp2(
+                                s_frag[mma_q][mma_kv][j * 2 + 1] * sm_scale -
+                                m[mma_q][j] * sm_scale);
+                        s_frag[mma_q][mma_kv][j * 2 + 4] =
+                            gpu_iface::math::ptx_exp2(
+                                s_frag[mma_q][mma_kv][j * 2 + 4] * sm_scale -
+                                m[mma_q][j] * sm_scale);
+                        s_frag[mma_q][mma_kv][j * 2 + 5] =
+                            gpu_iface::math::ptx_exp2(
+                                s_frag[mma_q][mma_kv][j * 2 + 5] * sm_scale -
+                                m[mma_q][j] * sm_scale);
                     }
                 }
             }
@@ -1108,15 +1126,15 @@ __device__ __forceinline__ void update_mdo_states(
                             __hmax(m[mma_q][j], __hmax(m_local.x, m_local.y));
                     }
                 }
-                *(half2 *)&m[mma_q] =
-                    __hmax2(*(half2 *)&m[mma_q],
-                            math::shfl_xor_sync(*(half2 *)&m[mma_q], 0x2));
-                *(half2 *)&m[mma_q] =
-                    __hmax2(*(half2 *)&m[mma_q],
-                            math::shfl_xor_sync(*(half2 *)&m[mma_q], 0x1));
+                *(half2 *)&m[mma_q] = __hmax2(
+                    *(half2 *)&m[mma_q],
+                    gpu_iface::math::shfl_xor_sync(*(half2 *)&m[mma_q], 0x2));
+                *(half2 *)&m[mma_q] = __hmax2(
+                    *(half2 *)&m[mma_q],
+                    gpu_iface::math::shfl_xor_sync(*(half2 *)&m[mma_q], 0x1));
 #pragma unroll
                 for (uint32_t j = 0; j < 2; ++j) {
-                    float o_scale = math::ptx_exp2(float(
+                    float o_scale = gpu_iface::math::ptx_exp2(float(
                         m_prev[j] * sm_scale.x - m[mma_q][j] * sm_scale.x));
                     d[mma_q][j] *= o_scale;
 #pragma unroll
@@ -1134,12 +1152,12 @@ __device__ __forceinline__ void update_mdo_states(
                          ++mma_kv)
                     {
                         *(half2 *)&s_frag[mma_q][mma_kv][j * 2] =
-                            math::ptx_exp2(
+                            gpu_iface::math::ptx_exp2(
                                 *(half2 *)&s_frag[mma_q][mma_kv][j * 2] *
                                     sm_scale -
                                 m2 * sm_scale);
                         *(half2 *)&s_frag[mma_q][mma_kv][j * 2 + 4] =
-                            math::ptx_exp2(
+                            gpu_iface::math::ptx_exp2(
                                 *(half2 *)&s_frag[mma_q][mma_kv][j * 2 + 4] *
                                     sm_scale -
                                 m2 * sm_scale);
@@ -1271,8 +1289,9 @@ normalize_d(float (*o_frag)[KTraits::NUM_MMA_D_VO][8],
 #pragma unroll
             for (uint32_t j = 0; j < 2; ++j) {
                 d_rcp[mma_q][j] =
-                    (m[mma_q][j] != typename KTraits::DTypeQKAccum(-math::inf))
-                        ? math::ptx_rcp(d[mma_q][j])
+                    (m[mma_q][j] !=
+                     typename KTraits::DTypeQKAccum(-gpu_iface::math::inf))
+                        ? gpu_iface::math::ptx_rcp(d[mma_q][j])
                         : 0.f;
             }
         }
@@ -1302,7 +1321,9 @@ finalize_m(typename KTraits::AttentionVariant variant,
         for (uint32_t mma_q = 0; mma_q < KTraits::NUM_MMA_Q; ++mma_q) {
 #pragma unroll
             for (uint32_t j = 0; j < 2; ++j) {
-                if (m[mma_q][j] != typename KTraits::DTypeQKAccum(-math::inf)) {
+                if (m[mma_q][j] !=
+                    typename KTraits::DTypeQKAccum(-gpu_iface::math::inf))
+                {
                     m[mma_q][j] *= variant.sm_scale_log2;
                 }
             }
@@ -1364,7 +1385,7 @@ threadblock_sync_mdo_states(float (*o_frag)[KTraits::NUM_MMA_D_VO][8],
                 float o_scale[2][KTraits::NUM_WARPS_KV];
 #pragma unroll
                 for (uint32_t j = 0; j < 2; ++j) {
-                    float m_new = -math::inf, d_new = 1.f;
+                    float m_new = -gpu_iface::math::inf, d_new = 1.f;
 #pragma unroll
                     for (uint32_t i = 0; i < KTraits::NUM_WARPS_KV; ++i) {
                         float2 md = smem_md[(((i * KTraits::NUM_WARPS_Q +
@@ -1377,8 +1398,9 @@ threadblock_sync_mdo_states(float (*o_frag)[KTraits::NUM_MMA_D_VO][8],
                                             lane_idx / 4];
                         float m_prev = m_new, d_prev = d_new;
                         m_new = max(m_new, md.x);
-                        d_new = d_prev * math::ptx_exp2(m_prev - m_new) +
-                                md.y * math::ptx_exp2(md.x - m_new);
+                        d_new =
+                            d_prev * gpu_iface::math::ptx_exp2(m_prev - m_new) +
+                            md.y * gpu_iface::math::ptx_exp2(md.x - m_new);
                     }
 
 #pragma unroll
@@ -1392,7 +1414,8 @@ threadblock_sync_mdo_states(float (*o_frag)[KTraits::NUM_MMA_D_VO][8],
                                                 8 +
                                             lane_idx / 4];
                         float mi = md.x;
-                        o_scale[j][i] = math::ptx_exp2(float(mi - m_new));
+                        o_scale[j][i] =
+                            gpu_iface::math::ptx_exp2(float(mi - m_new));
                     }
                     m[mma_q][j] = typename KTraits::DTypeQKAccum(m_new);
                     d[mma_q][j] = d_new;
@@ -1734,10 +1757,10 @@ SinglePrefillWithKVCacheDevice(const Params params,
                                     q_stride_n, q_stride_h, group_size,
                                     &qo_smem, tid);
 
-        cp_async::commit_group();
+        memory::commit_group();
         if constexpr (KTraits::POS_ENCODING_MODE == PosEncodingMode::kRoPELlama)
         {
-            cp_async::wait_group<0>();
+            memory::wait_group<0>();
             block.sync();
             q_smem_inplace_apply_rotary<KTraits>(
                 qo_packed_idx_base, qo_len, kv_len, group_size, &qo_smem,
@@ -1808,14 +1831,14 @@ SinglePrefillWithKVCacheDevice(const Params params,
                          lane_idx % KV_THR_LAYOUT_COL);
         produce_kv<false, SharedMemFillMode::kNoFill, KTraits>(
             k_smem, &k_smem_offset_w, &k_ptr, k_stride_n, 0, chunk_size, tid);
-        cp_async::commit_group();
+        memory::commit_group();
         produce_kv<true, SharedMemFillMode::kFillZero, KTraits>(
             v_smem, &v_smem_offset_w, &v_ptr, v_stride_n, 0, chunk_size, tid);
-        cp_async::commit_group();
+        memory::commit_group();
 
 #pragma unroll 1
         for (uint32_t iter = 0; iter < num_iterations; ++iter) {
-            cp_async::wait_group<1>();
+            memory::wait_group<1>();
             block.sync();
 
             if constexpr (KTraits::POS_ENCODING_MODE ==
@@ -1858,8 +1881,8 @@ SinglePrefillWithKVCacheDevice(const Params params,
             produce_kv<false, SharedMemFillMode::kNoFill, KTraits>(
                 k_smem, &k_smem_offset_w, &k_ptr, k_stride_n,
                 (iter + 1) * CTA_TILE_KV, chunk_size, tid);
-            cp_async::commit_group();
-            cp_async::wait_group<1>();
+            memory::commit_group();
+            memory::wait_group<1>();
             block.sync();
 
             // compute sfm*v
@@ -1870,9 +1893,9 @@ SinglePrefillWithKVCacheDevice(const Params params,
             produce_kv<true, SharedMemFillMode::kFillZero, KTraits>(
                 v_smem, &v_smem_offset_w, &v_ptr, v_stride_n,
                 (iter + 1) * CTA_TILE_KV, chunk_size, tid);
-            cp_async::commit_group();
+            memory::commit_group();
         }
-        cp_async::wait_group<0>();
+        memory::wait_group<0>();
         block.sync();
 
         finalize_m<KTraits>(variant, m);
@@ -1912,12 +1935,12 @@ SinglePrefillWithKVCacheDevice(const Params params,
                                     lse[(qo_idx * num_chunks + chunk_idx) *
                                             num_qo_heads +
                                         qo_head_idx] =
-                                        math::ptx_log2(d[mma_q][j]) +
+                                        gpu_iface::math::ptx_log2(d[mma_q][j]) +
                                         float(m[mma_q][j]);
                                 }
                                 else {
                                     lse[qo_idx * num_qo_heads + qo_head_idx] =
-                                        math::ptx_log2(d[mma_q][j]) +
+                                        gpu_iface::math::ptx_log2(d[mma_q][j]) +
                                         float(m[mma_q][j]);
                                 }
                             }
@@ -1949,9 +1972,9 @@ template <uint32_t HEAD_DIM_QK,
           MaskMode MASK_MODE,
           typename AttentionVariant,
           typename Params>
-cudaError_t SinglePrefillWithKVCacheDispatched(Params params,
-                                               typename Params::DTypeO *tmp,
-                                               cudaStream_t stream)
+gpuError_t SinglePrefillWithKVCacheDispatched(Params params,
+                                              typename Params::DTypeO *tmp,
+                                              gpuStream_t stream)
 {
     using DTypeQ = typename Params::DTypeQ;
     using DTypeKV = typename Params::DTypeKV;
@@ -1963,8 +1986,7 @@ cudaError_t SinglePrefillWithKVCacheDispatched(Params params,
     if (kv_len < qo_len && MASK_MODE == MaskMode::kCausal) {
         std::ostringstream err_msg;
         err_msg << "When mask_mode is set to MaskMode::kCausal, kv_len must be "
-                   "greater than or equal "
-                   "to qo_len, got kv_len"
+                   "greater than or equal to qo_len, got kv_len"
                 << kv_len << " and qo_len " << qo_len;
         FLASHINFER_ERROR(err_msg.str());
     }
@@ -1986,10 +2008,10 @@ cudaError_t SinglePrefillWithKVCacheDispatched(Params params,
                                       half, float>::type;
 
         int dev_id = 0;
-        FLASHINFER_CUDA_CALL(cudaGetDevice(&dev_id));
+        FI_GPU_CALL(gpuGetDevice(&dev_id));
         int max_smem_per_sm = 0;
-        FLASHINFER_CUDA_CALL(cudaDeviceGetAttribute(
-            &max_smem_per_sm, cudaDevAttrMaxSharedMemoryPerMultiprocessor,
+        FI_GPU_CALL(gpuDeviceGetAttribute(
+            &max_smem_per_sm, gpuDevAttrMaxSharedMemoryPerMultiProcessor,
             dev_id));
         // we expect each sm execute two threadblocks
         const int num_ctas_per_sm =
@@ -2042,17 +2064,15 @@ cudaError_t SinglePrefillWithKVCacheDispatched(Params params,
                     auto kernel =
                         SinglePrefillWithKVCacheKernel<KTraits, Params>;
                     size_t smem_size = sizeof(typename KTraits::SharedStorage);
-                    FLASHINFER_CUDA_CALL(cudaFuncSetAttribute(
-                        kernel, cudaFuncAttributeMaxDynamicSharedMemorySize,
+                    FI_GPU_CALL(gpuFuncSetAttribute(
+                        kernel, gpuFuncAttributeMaxDynamicSharedMemorySize,
                         smem_size));
                     int num_blocks_per_sm = 0;
                     int num_sm = 0;
-                    FLASHINFER_CUDA_CALL(cudaDeviceGetAttribute(
-                        &num_sm, cudaDevAttrMultiProcessorCount, dev_id));
-                    FLASHINFER_CUDA_CALL(
-                        cudaOccupancyMaxActiveBlocksPerMultiprocessor(
-                            &num_blocks_per_sm, kernel, num_threads,
-                            smem_size));
+                    FI_GPU_CALL(gpuDeviceGetAttribute(
+                        &num_sm, gpuDevAttrMultiProcessorCount, dev_id));
+                    FI_GPU_CALL(gpuOccupancyMaxActiveBlocksPerMultiprocessor(
+                        &num_blocks_per_sm, kernel, num_threads, smem_size));
                     uint32_t max_num_kv_chunks =
                         (num_blocks_per_sm * num_sm) /
                         (num_kv_heads *
@@ -2074,9 +2094,9 @@ cudaError_t SinglePrefillWithKVCacheDispatched(Params params,
                         dim3 nblks(ceil_div(qo_len * group_size, CTA_TILE_Q), 1,
                                    num_kv_heads);
                         dim3 nthrs(32, NUM_WARPS_Q, NUM_WARPS_KV);
-                        FLASHINFER_CUDA_CALL(
-                            cudaLaunchKernel((void *)kernel, nblks, nthrs, args,
-                                             smem_size, stream));
+                        FI_GPU_CALL(gpuLaunchKernel((void *)kernel, nblks,
+                                                    nthrs, args, smem_size,
+                                                    stream));
                     }
                     else {
                         // Use cooperative groups to increase occupancy
@@ -2092,24 +2112,24 @@ cudaError_t SinglePrefillWithKVCacheDispatched(Params params,
                         dim3 nblks(ceil_div(qo_len * group_size, CTA_TILE_Q),
                                    num_chunks, num_kv_heads);
                         dim3 nthrs(32, NUM_WARPS_Q, NUM_WARPS_KV);
-                        FLASHINFER_CUDA_CALL(
-                            cudaLaunchKernel((void *)kernel, nblks, nthrs, args,
-                                             smem_size, stream));
+                        FI_GPU_CALL(gpuLaunchKernel((void *)kernel, nblks,
+                                                    nthrs, args, smem_size,
+                                                    stream));
                         if constexpr (AttentionVariant::use_softmax) {
-                            FLASHINFER_CUDA_CALL(MergeStates(
+                            FI_GPU_CALL(MergeStates(
                                 tmp, tmp_lse, o, lse, num_chunks, qo_len,
                                 num_qo_heads, HEAD_DIM_VO, stream));
                         }
                         else {
-                            FLASHINFER_CUDA_CALL(AttentionSum(
-                                tmp, o, num_chunks, qo_len, num_qo_heads,
-                                HEAD_DIM_VO, stream));
+                            FI_GPU_CALL(AttentionSum(tmp, o, num_chunks, qo_len,
+                                                     num_qo_heads, HEAD_DIM_VO,
+                                                     stream));
                         }
                     }
                 }
             })
     });
-    return cudaSuccess;
+    return gpuSuccess;
 }
 
 template <typename KTraits, typename Params>
@@ -2256,11 +2276,11 @@ __launch_bounds__(KTraits::NUM_THREADS) void BatchPrefillWithRaggedKVCacheKernel
                                     q_ptr_base, q_stride_n, q_stride_h,
                                     group_size, &qo_smem, tid);
 
-        cp_async::commit_group();
+        memory::commit_group();
 
         if constexpr (KTraits::POS_ENCODING_MODE == PosEncodingMode::kRoPELlama)
         {
-            cp_async::wait_group<0>();
+            memory::wait_group<0>();
             block.sync();
             IdType *q_rope_offset = nullptr;
 
@@ -2347,14 +2367,14 @@ __launch_bounds__(KTraits::NUM_THREADS) void BatchPrefillWithRaggedKVCacheKernel
 
         produce_kv<false, SharedMemFillMode::kNoFill, KTraits>(
             k_smem, &k_smem_offset_w, &k_ptr, k_stride_n, 0, chunk_size, tid);
-        cp_async::commit_group();
+        memory::commit_group();
         produce_kv<true, SharedMemFillMode::kFillZero, KTraits>(
             v_smem, &v_smem_offset_w, &v_ptr, v_stride_n, 0, chunk_size, tid);
-        cp_async::commit_group();
+        memory::commit_group();
 
 #pragma unroll 1
         for (uint32_t iter = 0; iter < num_iterations; ++iter) {
-            cp_async::wait_group<1>();
+            memory::wait_group<1>();
             block.sync();
 
             if constexpr (KTraits::POS_ENCODING_MODE ==
@@ -2404,8 +2424,8 @@ __launch_bounds__(KTraits::NUM_THREADS) void BatchPrefillWithRaggedKVCacheKernel
             produce_kv<false, SharedMemFillMode::kNoFill, KTraits>(
                 k_smem, &k_smem_offset_w, &k_ptr, k_stride_n,
                 (iter + 1) * CTA_TILE_KV, chunk_size, tid);
-            cp_async::commit_group();
-            cp_async::wait_group<1>();
+            memory::commit_group();
+            memory::wait_group<1>();
             block.sync();
 
             // compute sfm*v
@@ -2416,9 +2436,9 @@ __launch_bounds__(KTraits::NUM_THREADS) void BatchPrefillWithRaggedKVCacheKernel
             produce_kv<true, SharedMemFillMode::kFillZero, KTraits>(
                 v_smem, &v_smem_offset_w, &v_ptr, v_stride_n,
                 (iter + 1) * CTA_TILE_KV, chunk_size, tid);
-            cp_async::commit_group();
+            memory::commit_group();
         }
-        cp_async::wait_group<0>();
+        memory::wait_group<0>();
         block.sync();
 
         finalize_m<KTraits>(variant, m);
@@ -2462,14 +2482,14 @@ __launch_bounds__(KTraits::NUM_THREADS) void BatchPrefillWithRaggedKVCacheKernel
                                          qo_idx * num_kv_chunks + kv_tile_idx) *
                                             num_qo_heads +
                                         qo_head_idx] =
-                                        math::ptx_log2(d[mma_q][j]) +
+                                        gpu_iface::math::ptx_log2(d[mma_q][j]) +
                                         float(m[mma_q][j]);
                                 }
                                 else {
                                     lse[(o_indptr[request_idx] + qo_idx) *
                                             num_qo_heads +
                                         qo_head_idx] =
-                                        math::ptx_log2(d[mma_q][j]) +
+                                        gpu_iface::math::ptx_log2(d[mma_q][j]) +
                                         float(m[mma_q][j]);
                                 }
                             }
@@ -2618,11 +2638,11 @@ __device__ __forceinline__ void BatchPrefillWithPagedKVCacheDevice(
                                     q_ptr_base, q_stride_n, q_stride_h,
                                     group_size, &qo_smem, tid);
 
-        cp_async::commit_group();
+        memory::commit_group();
 
         if constexpr (KTraits::POS_ENCODING_MODE == PosEncodingMode::kRoPELlama)
         {
-            cp_async::wait_group<0>();
+            memory::wait_group<0>();
             block.sync();
             IdType *q_rope_offset = nullptr;
             if constexpr (has_maybe_q_rope_offset_v<Params>) {
@@ -2689,10 +2709,10 @@ __device__ __forceinline__ void BatchPrefillWithPagedKVCacheDevice(
         }
         page_produce_kv<false, KTraits>(k_smem, &k_smem_offset_w, paged_kv, 0,
                                         thr_local_kv_offset, chunk_size, tid);
-        cp_async::commit_group();
+        memory::commit_group();
         page_produce_kv<true, KTraits>(v_smem, &v_smem_offset_w, paged_kv, 0,
                                        thr_local_kv_offset, chunk_size, tid);
-        cp_async::commit_group();
+        memory::commit_group();
 
         const uint32_t num_iterations = ceil_div(
             (MASK_MODE == MaskMode::kCausal
@@ -2741,7 +2761,7 @@ __device__ __forceinline__ void BatchPrefillWithPagedKVCacheDevice(
                     (lane_idx % KV_THR_LAYOUT_COL) * upcast_size<DTypeKV>(),
                     last_indptr);
             }
-            cp_async::wait_group<1>();
+            memory::wait_group<1>();
             block.sync();
 
             if constexpr (KTraits::POS_ENCODING_MODE ==
@@ -2788,8 +2808,8 @@ __device__ __forceinline__ void BatchPrefillWithPagedKVCacheDevice(
             page_produce_kv<false, KTraits>(
                 k_smem, &k_smem_offset_w, paged_kv, (iter + 1) * CTA_TILE_KV,
                 thr_local_kv_offset, chunk_size, tid);
-            cp_async::commit_group();
-            cp_async::wait_group<1>();
+            memory::commit_group();
+            memory::wait_group<1>();
             block.sync();
 
             // compute sfm*v
@@ -2800,9 +2820,9 @@ __device__ __forceinline__ void BatchPrefillWithPagedKVCacheDevice(
             page_produce_kv<true, KTraits>(
                 v_smem, &v_smem_offset_w, paged_kv, (iter + 1) * CTA_TILE_KV,
                 thr_local_kv_offset, chunk_size, tid);
-            cp_async::commit_group();
+            memory::commit_group();
         }
-        cp_async::wait_group<0>();
+        memory::wait_group<0>();
         block.sync();
 
         finalize_m<KTraits>(variant, m);
@@ -2846,14 +2866,14 @@ __device__ __forceinline__ void BatchPrefillWithPagedKVCacheDevice(
                                          qo_idx * num_kv_chunks + kv_tile_idx) *
                                             num_qo_heads +
                                         qo_head_idx] =
-                                        math::ptx_log2(d[mma_q][j]) +
+                                        gpu_iface::math::ptx_log2(d[mma_q][j]) +
                                         float(m[mma_q][j]);
                                 }
                                 else {
                                     lse[(o_indptr[request_idx] + qo_idx) *
                                             num_qo_heads +
                                         qo_head_idx] =
-                                        math::ptx_log2(d[mma_q][j]) +
+                                        gpu_iface::math::ptx_log2(d[mma_q][j]) +
                                         float(m[mma_q][j]);
                                 }
                             }
@@ -2886,11 +2906,11 @@ template <uint32_t CTA_TILE_Q,
           MaskMode MASK_MODE,
           typename AttentionVariant,
           typename Params>
-cudaError_t
+gpuError_t
 BatchPrefillWithRaggedKVCacheDispatched(Params params,
                                         typename Params::DTypeO *tmp_v,
                                         float *tmp_s,
-                                        cudaStream_t stream)
+                                        gpuStream_t stream)
 {
     using DTypeQ = typename Params::DTypeQ;
     using DTypeKV = typename Params::DTypeKV;
@@ -2906,7 +2926,7 @@ BatchPrefillWithRaggedKVCacheDispatched(Params params,
         // No request, skip
         // this won't happen in CUDAGraph mode because we fixed the
         // padded_batch_size
-        return cudaSuccess;
+        return gpuSuccess;
     }
 
     dim3 nblks(padded_batch_size, 1, num_kv_heads);
@@ -2919,10 +2939,10 @@ BatchPrefillWithRaggedKVCacheDispatched(Params params,
                                   half, float>::type;
 
     int dev_id = 0;
-    FLASHINFER_CUDA_CALL(cudaGetDevice(&dev_id));
+    FI_GPU_CALL(gpuGetDevice(&dev_id));
     int max_smem_per_sm = 0;
-    FLASHINFER_CUDA_CALL(cudaDeviceGetAttribute(
-        &max_smem_per_sm, cudaDevAttrMaxSharedMemoryPerMultiprocessor, dev_id));
+    FI_GPU_CALL(gpuDeviceGetAttribute(
+        &max_smem_per_sm, gpuDevAttrMaxSharedMemoryPerMultiProcessor, dev_id));
     // we expect each sm execute two threadblocks
     const int num_ctas_per_sm =
         max_smem_per_sm >= 2 * (CTA_TILE_Q * HEAD_DIM_QK * sizeof(DTypeQ) +
@@ -2970,15 +2990,15 @@ BatchPrefillWithRaggedKVCacheDispatched(Params params,
                 size_t smem_size = sizeof(typename KTraits::SharedStorage);
                 auto kernel =
                     BatchPrefillWithRaggedKVCacheKernel<KTraits, Params>;
-                FLASHINFER_CUDA_CALL(cudaFuncSetAttribute(
-                    kernel, cudaFuncAttributeMaxDynamicSharedMemorySize,
+                FI_GPU_CALL(gpuFuncSetAttribute(
+                    kernel, gpuFuncAttributeMaxDynamicSharedMemorySize,
                     smem_size));
                 if (tmp_v == nullptr) {
                     // do not partition kv
                     params.partition_kv = false;
                     void *args[] = {(void *)&params};
-                    FLASHINFER_CUDA_CALL(cudaLaunchKernel(
-                        (void *)kernel, nblks, nthrs, args, smem_size, stream));
+                    FI_GPU_CALL(gpuLaunchKernel((void *)kernel, nblks, nthrs,
+                                                args, smem_size, stream));
                 }
                 else {
                     // partition kv
@@ -2988,16 +3008,16 @@ BatchPrefillWithRaggedKVCacheDispatched(Params params,
                     params.o = tmp_v;
                     params.lse = tmp_s;
                     void *args[] = {(void *)&params};
-                    FLASHINFER_CUDA_CALL(cudaLaunchKernel(
-                        (void *)kernel, nblks, nthrs, args, smem_size, stream));
+                    FI_GPU_CALL(gpuLaunchKernel((void *)kernel, nblks, nthrs,
+                                                args, smem_size, stream));
                     if constexpr (AttentionVariant::use_softmax) {
-                        FLASHINFER_CUDA_CALL(VariableLengthMergeStates(
+                        FI_GPU_CALL(VariableLengthMergeStates(
                             tmp_v, tmp_s, params.merge_indptr, o, lse,
                             params.max_total_num_rows, params.total_num_rows,
                             num_qo_heads, HEAD_DIM_VO, stream));
                     }
                     else {
-                        FLASHINFER_CUDA_CALL(VariableLengthAttentionSum(
+                        FI_GPU_CALL(VariableLengthAttentionSum(
                             tmp_v, params.merge_indptr, o,
                             params.max_total_num_rows, params.total_num_rows,
                             num_qo_heads, HEAD_DIM_VO, stream));
@@ -3005,7 +3025,7 @@ BatchPrefillWithRaggedKVCacheDispatched(Params params,
                 }
             }
         });
-    return cudaSuccess;
+    return gpuSuccess;
 }
 
 template <uint32_t CTA_TILE_Q,
@@ -3016,11 +3036,11 @@ template <uint32_t CTA_TILE_Q,
           MaskMode MASK_MODE,
           typename AttentionVariant,
           typename Params>
-cudaError_t
+gpuError_t
 BatchPrefillWithPagedKVCacheDispatched(Params params,
                                        typename Params::DTypeO *tmp_v,
                                        float *tmp_s,
-                                       cudaStream_t stream)
+                                       gpuStream_t stream)
 {
     using DTypeQ = typename Params::DTypeQ;
     using DTypeKV = typename Params::DTypeKV;
@@ -3036,7 +3056,7 @@ BatchPrefillWithPagedKVCacheDispatched(Params params,
         // No request, skip
         // this won't happen in CUDAGraph mode because we fixed the
         // padded_batch_size
-        return cudaSuccess;
+        return gpuSuccess;
     }
 
     dim3 nblks(padded_batch_size, 1, num_kv_heads);
@@ -3050,10 +3070,10 @@ BatchPrefillWithPagedKVCacheDispatched(Params params,
                                   half, float>::type;
 
     int dev_id = 0;
-    FLASHINFER_CUDA_CALL(cudaGetDevice(&dev_id));
+    FI_GPU_CALL(gpuGetDevice(&dev_id));
     int max_smem_per_sm = 0;
-    FLASHINFER_CUDA_CALL(cudaDeviceGetAttribute(
-        &max_smem_per_sm, cudaDevAttrMaxSharedMemoryPerMultiprocessor, dev_id));
+    FI_GPU_CALL(gpuDeviceGetAttribute(
+        &max_smem_per_sm, gpuDevAttrMaxSharedMemoryPerMultiProcessor, dev_id));
     // we expect each sm execute two threadblocks
     const int num_ctas_per_sm =
         max_smem_per_sm >= 2 * (CTA_TILE_Q * HEAD_DIM_QK * sizeof(DTypeQ) +
@@ -3101,15 +3121,15 @@ BatchPrefillWithPagedKVCacheDispatched(Params params,
                 size_t smem_size = sizeof(typename KTraits::SharedStorage);
                 auto kernel =
                     BatchPrefillWithPagedKVCacheKernel<KTraits, Params>;
-                FLASHINFER_CUDA_CALL(cudaFuncSetAttribute(
-                    kernel, cudaFuncAttributeMaxDynamicSharedMemorySize,
+                FI_GPU_CALL(gpuFuncSetAttribute(
+                    kernel, gpuFuncAttributeMaxDynamicSharedMemorySize,
                     smem_size));
                 if (tmp_v == nullptr) {
                     // do not partition kv
                     params.partition_kv = false;
                     void *args[] = {(void *)&params};
-                    FLASHINFER_CUDA_CALL(cudaLaunchKernel(
-                        (void *)kernel, nblks, nthrs, args, smem_size, stream));
+                    FI_GPU_CALL(gpuLaunchKernel((void *)kernel, nblks, nthrs,
+                                                args, smem_size, stream));
                 }
                 else {
                     params.partition_kv = true;
@@ -3118,16 +3138,16 @@ BatchPrefillWithPagedKVCacheDispatched(Params params,
                     params.o = tmp_v;
                     params.lse = tmp_s;
                     void *args[] = {(void *)&params};
-                    FLASHINFER_CUDA_CALL(cudaLaunchKernel(
-                        (void *)kernel, nblks, nthrs, args, smem_size, stream));
+                    FI_GPU_CALL(gpuLaunchKernel((void *)kernel, nblks, nthrs,
+                                                args, smem_size, stream));
                     if constexpr (AttentionVariant::use_softmax) {
-                        FLASHINFER_CUDA_CALL(VariableLengthMergeStates(
+                        FI_GPU_CALL(VariableLengthMergeStates(
                             tmp_v, tmp_s, params.merge_indptr, o, lse,
                             params.max_total_num_rows, params.total_num_rows,
                             num_qo_heads, HEAD_DIM_VO, stream));
                     }
                     else {
-                        FLASHINFER_CUDA_CALL(VariableLengthAttentionSum(
+                        FI_GPU_CALL(VariableLengthAttentionSum(
                             tmp_v, params.merge_indptr, o,
                             params.max_total_num_rows, params.total_num_rows,
                             num_qo_heads, HEAD_DIM_VO, stream));
@@ -3135,7 +3155,7 @@ BatchPrefillWithPagedKVCacheDispatched(Params params,
                 }
             }
         });
-    return cudaSuccess;
+    return gpuSuccess;
 }
 
 } // namespace flashinfer

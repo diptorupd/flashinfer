@@ -22,9 +22,11 @@
 #include <string>
 
 #include "layout.cuh"
-#include "math.cuh"
 #include "utils.cuh"
 #include "vec_dtypes.cuh"
+
+#include "../gpu_iface/math_ops.hpp"
+#include "../gpu_iface/platform.hpp"
 
 namespace flashinfer
 {
@@ -65,11 +67,12 @@ PosEncodingModeToString(const PosEncodingMode &pos_encoding_mode)
 __device__ __forceinline__ float get_alibi_slope(uint32_t head_idx,
                                                  uint32_t num_heads)
 {
-    int n = math::ptx_exp2((int)math::ptx_log2(num_heads));
+    int n =
+        gpu_iface::math::ptx_exp2((int)gpu_iface::math::ptx_log2(num_heads));
     return head_idx < n
-               ? math::ptx_exp2(-8. * float(head_idx + 1) / float(n))
-               : math::ptx_exp2(-4. * float((head_idx + 1 - n) * 2 - 1) /
-                                float(n));
+               ? gpu_iface::math::ptx_exp2(-8. * float(head_idx + 1) / float(n))
+               : gpu_iface::math::ptx_exp2(
+                     -4. * float((head_idx + 1 - n) * 2 - 1) / float(n));
 }
 
 /*!
@@ -790,33 +793,33 @@ __global__ void BatchQKApplyRotaryKernel(DType *q,
     }
 
 template <typename DType, typename IdType>
-cudaError_t BatchQKApplyRotaryPosIdsCosSinCache(DType *q,
-                                                DType *k,
-                                                DType *q_rope,
-                                                DType *k_rope,
-                                                float *cos_sin_cache,
-                                                IdType *pos_ids,
-                                                uint32_t nnz,
-                                                uint32_t num_qo_heads,
-                                                uint32_t num_kv_heads,
-                                                uint32_t rotary_dim,
-                                                uint32_t head_dim,
-                                                size_t q_stride_n,
-                                                size_t q_stride_h,
-                                                size_t k_stride_n,
-                                                size_t k_stride_h,
-                                                size_t q_rope_stride_n,
-                                                size_t q_rope_stride_h,
-                                                size_t k_rope_stride_n,
-                                                size_t k_rope_stride_h,
-                                                bool interleave,
-                                                cudaStream_t stream = nullptr)
+gpuError_t BatchQKApplyRotaryPosIdsCosSinCache(DType *q,
+                                               DType *k,
+                                               DType *q_rope,
+                                               DType *k_rope,
+                                               float *cos_sin_cache,
+                                               IdType *pos_ids,
+                                               uint32_t nnz,
+                                               uint32_t num_qo_heads,
+                                               uint32_t num_kv_heads,
+                                               uint32_t rotary_dim,
+                                               uint32_t head_dim,
+                                               size_t q_stride_n,
+                                               size_t q_stride_h,
+                                               size_t k_stride_n,
+                                               size_t k_stride_h,
+                                               size_t q_rope_stride_n,
+                                               size_t q_rope_stride_h,
+                                               size_t k_rope_stride_n,
+                                               size_t k_rope_stride_h,
+                                               bool interleave,
+                                               gpuStream_t stream = nullptr)
 {
     int dev_id = 0;
     int num_sms = 0;
-    FLASHINFER_CUDA_CALL(cudaGetDevice(&dev_id));
-    FLASHINFER_CUDA_CALL(cudaDeviceGetAttribute(
-        &num_sms, cudaDevAttrMultiProcessorCount, dev_id));
+    FI_GPU_CALL(gpuGetDevice(&dev_id));
+    FI_GPU_CALL(
+        gpuDeviceGetAttribute(&num_sms, gpuDevAttrMultiProcessorCount, dev_id));
 
     DISPATCH_INTERLEAVE(interleave, INTERLEAVE, {
         DISPATCH_HEAD_DIM(head_dim, HEAD_DIM, {
@@ -853,15 +856,15 @@ cudaError_t BatchQKApplyRotaryPosIdsCosSinCache(DType *q,
                 INTERLEAVE, HEAD_DIM, vec_size, bdx, DType, IdType>;
 
             int num_blocks_per_sm_0 = 0;
-            FLASHINFER_CUDA_CALL(cudaOccupancyMaxActiveBlocksPerMultiprocessor(
+            FI_GPU_CALL(gpuOccupancyMaxActiveBlocksPerMultiprocessor(
                 &num_blocks_per_sm_0, kernel_0, num_threads, /*smem_size=*/0));
             uint32_t num_ctas_0 = num_blocks_per_sm_0 * num_sms;
 
             if ((nnz + bdy - 1) / bdy >= num_ctas_0) {
                 dim3 nblks(nblks_x);
                 dim3 nthrs(bdx, bdy);
-                FLASHINFER_CUDA_CALL(cudaLaunchKernel((void *)kernel_0, nblks,
-                                                      nthrs, args, 0, stream));
+                FI_GPU_CALL(gpuLaunchKernel((void *)kernel_0, nblks, nthrs,
+                                            args, 0, stream));
             }
             else {
                 dim3 nblks(nblks_x, num_qo_heads + num_kv_heads);
@@ -869,38 +872,38 @@ cudaError_t BatchQKApplyRotaryPosIdsCosSinCache(DType *q,
                 auto kernel_1 =
                     BatchQKApplyRotaryPosIdsCosSinCacheHeadParallelismKernel<
                         INTERLEAVE, HEAD_DIM, vec_size, bdx, DType, IdType>;
-                FLASHINFER_CUDA_CALL(cudaLaunchKernel((void *)kernel_1, nblks,
-                                                      nthrs, args, 0, stream));
+                FI_GPU_CALL(gpuLaunchKernel((void *)kernel_1, nblks, nthrs,
+                                            args, 0, stream));
             }
         });
     });
 
-    return cudaSuccess;
+    return gpuSuccess;
 }
 
 template <typename DType, typename IdType>
-cudaError_t BatchQKApplyRotaryPosIds(DType *q,
-                                     DType *k,
-                                     DType *q_rope,
-                                     DType *k_rope,
-                                     IdType *__restrict__ pos_ids,
-                                     uint32_t nnz,
-                                     uint32_t num_qo_heads,
-                                     uint32_t num_kv_heads,
-                                     uint32_t rotary_dim,
-                                     uint32_t head_dim,
-                                     size_t q_stride_n,
-                                     size_t q_stride_h,
-                                     size_t k_stride_n,
-                                     size_t k_stride_h,
-                                     size_t q_rope_stride_n,
-                                     size_t q_rope_stride_h,
-                                     size_t k_rope_stride_n,
-                                     size_t k_rope_stride_h,
-                                     bool interleave,
-                                     float rope_scale,
-                                     float rope_theta,
-                                     cudaStream_t stream = nullptr)
+gpuError_t BatchQKApplyRotaryPosIds(DType *q,
+                                    DType *k,
+                                    DType *q_rope,
+                                    DType *k_rope,
+                                    IdType *__restrict__ pos_ids,
+                                    uint32_t nnz,
+                                    uint32_t num_qo_heads,
+                                    uint32_t num_kv_heads,
+                                    uint32_t rotary_dim,
+                                    uint32_t head_dim,
+                                    size_t q_stride_n,
+                                    size_t q_stride_h,
+                                    size_t k_stride_n,
+                                    size_t k_stride_h,
+                                    size_t q_rope_stride_n,
+                                    size_t q_rope_stride_h,
+                                    size_t k_rope_stride_n,
+                                    size_t k_rope_stride_h,
+                                    bool interleave,
+                                    float rope_scale,
+                                    float rope_theta,
+                                    gpuStream_t stream = nullptr)
 {
     float rope_rcp_scale = 1.0f / rope_scale;
     float rope_rcp_theta = 1.0f / rope_theta;
@@ -908,9 +911,9 @@ cudaError_t BatchQKApplyRotaryPosIds(DType *q,
     float smooth_b = 0.f;
     int dev_id = 0;
     int num_sms = 0;
-    FLASHINFER_CUDA_CALL(cudaGetDevice(&dev_id));
-    FLASHINFER_CUDA_CALL(cudaDeviceGetAttribute(
-        &num_sms, cudaDevAttrMultiProcessorCount, dev_id));
+    FI_GPU_CALL(gpuGetDevice(&dev_id));
+    FI_GPU_CALL(
+        gpuDeviceGetAttribute(&num_sms, gpuDevAttrMultiProcessorCount, dev_id));
 
     DISPATCH_INTERLEAVE(interleave, INTERLEAVE, {
         DISPATCH_HEAD_DIM(head_dim, HEAD_DIM, {
@@ -947,15 +950,15 @@ cudaError_t BatchQKApplyRotaryPosIds(DType *q,
                                                bdx, DType, IdType>;
 
             int num_blocks_per_sm_0 = 0;
-            FLASHINFER_CUDA_CALL(cudaOccupancyMaxActiveBlocksPerMultiprocessor(
+            FI_GPU_CALL(gpuOccupancyMaxActiveBlocksPerMultiprocessor(
                 &num_blocks_per_sm_0, kernel_0, num_threads, /*smem_size=*/0));
             uint32_t num_ctas_0 = num_blocks_per_sm_0 * num_sms;
             if (nblks_x >= num_ctas_0) {
                 dim3 nblks(nblks_x);
                 dim3 nthrs(bdx, bdy);
 
-                FLASHINFER_CUDA_CALL(cudaLaunchKernel((void *)kernel_0, nblks,
-                                                      nthrs, args, 0, stream));
+                FI_GPU_CALL(gpuLaunchKernel((void *)kernel_0, nblks, nthrs,
+                                            args, 0, stream));
             }
             else {
                 dim3 nblks(nblks_x, num_qo_heads + num_kv_heads);
@@ -963,39 +966,39 @@ cudaError_t BatchQKApplyRotaryPosIds(DType *q,
                 auto kernel_1 = BatchQKApplyRotaryPosIdsHeadParallelismKernel<
                     INTERLEAVE, HEAD_DIM, vec_size, bdx, DType, IdType>;
 
-                FLASHINFER_CUDA_CALL(cudaLaunchKernel((void *)kernel_1, nblks,
-                                                      nthrs, args, 0, stream));
+                FI_GPU_CALL(gpuLaunchKernel((void *)kernel_1, nblks, nthrs,
+                                            args, 0, stream));
             }
         });
     });
 
-    return cudaSuccess;
+    return gpuSuccess;
 }
 
 template <typename DType, typename IdType>
-cudaError_t BatchQKApplyRotary(DType *q,
-                               DType *k,
-                               DType *q_rope,
-                               DType *k_rope,
-                               IdType *__restrict__ indptr,
-                               IdType *__restrict__ offsets,
-                               uint32_t batch_size,
-                               uint32_t num_qo_heads,
-                               uint32_t num_kv_heads,
-                               uint32_t rotary_dim,
-                               uint32_t head_dim,
-                               size_t q_stride_n,
-                               size_t q_stride_h,
-                               size_t k_stride_n,
-                               size_t k_stride_h,
-                               size_t q_rope_stride_n,
-                               size_t q_rope_stride_h,
-                               size_t k_rope_stride_n,
-                               size_t k_rope_stride_h,
-                               bool interleave,
-                               float rope_scale,
-                               float rope_theta,
-                               cudaStream_t stream = nullptr)
+gpuError_t BatchQKApplyRotary(DType *q,
+                              DType *k,
+                              DType *q_rope,
+                              DType *k_rope,
+                              IdType *__restrict__ indptr,
+                              IdType *__restrict__ offsets,
+                              uint32_t batch_size,
+                              uint32_t num_qo_heads,
+                              uint32_t num_kv_heads,
+                              uint32_t rotary_dim,
+                              uint32_t head_dim,
+                              size_t q_stride_n,
+                              size_t q_stride_h,
+                              size_t k_stride_n,
+                              size_t k_stride_h,
+                              size_t q_rope_stride_n,
+                              size_t q_rope_stride_h,
+                              size_t k_rope_stride_n,
+                              size_t k_rope_stride_h,
+                              bool interleave,
+                              float rope_scale,
+                              float rope_theta,
+                              gpuStream_t stream = nullptr)
 {
     float rope_rcp_scale = 1.0f / rope_scale;
     float rope_rcp_theta = 1.0f / rope_theta;
@@ -1036,32 +1039,32 @@ cudaError_t BatchQKApplyRotary(DType *q,
                             (void *)&smooth_b,
                             (void *)&rope_rcp_scale,
                             (void *)&rope_rcp_theta};
-            FLASHINFER_CUDA_CALL(cudaLaunchKernel((void *)kernel, nblks, nthrs,
-                                                  args, 0, stream));
+            FI_GPU_CALL(
+                gpuLaunchKernel((void *)kernel, nblks, nthrs, args, 0, stream));
         });
     });
 
-    return cudaSuccess;
+    return gpuSuccess;
 }
 
 template <typename DType, typename IdType>
-cudaError_t BatchQKApplyRotaryInPlace(DType *__restrict__ q,
-                                      DType *__restrict__ k,
-                                      IdType *__restrict__ indptr,
-                                      IdType *__restrict__ offsets,
-                                      uint32_t batch_size,
-                                      uint32_t num_qo_heads,
-                                      uint32_t num_kv_heads,
-                                      uint32_t rotary_dim,
-                                      uint32_t head_dim,
-                                      size_t q_stride_n,
-                                      size_t q_stride_h,
-                                      size_t k_stride_n,
-                                      size_t k_stride_h,
-                                      bool interleave,
-                                      float rope_scale,
-                                      float rope_theta,
-                                      cudaStream_t stream = nullptr)
+gpuError_t BatchQKApplyRotaryInPlace(DType *__restrict__ q,
+                                     DType *__restrict__ k,
+                                     IdType *__restrict__ indptr,
+                                     IdType *__restrict__ offsets,
+                                     uint32_t batch_size,
+                                     uint32_t num_qo_heads,
+                                     uint32_t num_kv_heads,
+                                     uint32_t rotary_dim,
+                                     uint32_t head_dim,
+                                     size_t q_stride_n,
+                                     size_t q_stride_h,
+                                     size_t k_stride_n,
+                                     size_t k_stride_h,
+                                     bool interleave,
+                                     float rope_scale,
+                                     float rope_theta,
+                                     gpuStream_t stream = nullptr)
 {
     return BatchQKApplyRotary<DType, IdType>(
         q, k, q, k, indptr, offsets, batch_size, num_qo_heads, num_kv_heads,
@@ -1071,32 +1074,32 @@ cudaError_t BatchQKApplyRotaryInPlace(DType *__restrict__ q,
 }
 
 template <typename DType, typename IdType>
-cudaError_t BatchQKApplyLlama31Rotary(DType *q,
-                                      DType *k,
-                                      DType *q_rope,
-                                      DType *k_rope,
-                                      IdType *__restrict__ indptr,
-                                      IdType *__restrict__ offsets,
-                                      uint32_t batch_size,
-                                      uint32_t num_qo_heads,
-                                      uint32_t num_kv_heads,
-                                      uint32_t rotary_dim,
-                                      uint32_t head_dim,
-                                      size_t q_stride_n,
-                                      size_t q_stride_h,
-                                      size_t k_stride_n,
-                                      size_t k_stride_h,
-                                      size_t q_rope_stride_n,
-                                      size_t q_rope_stride_h,
-                                      size_t k_rope_stride_n,
-                                      size_t k_rope_stride_h,
-                                      bool interleave,
-                                      float rope_scale,
-                                      float rope_theta,
-                                      float low_freq_factor,
-                                      float high_freq_factor,
-                                      float old_context_length,
-                                      cudaStream_t stream = nullptr)
+gpuError_t BatchQKApplyLlama31Rotary(DType *q,
+                                     DType *k,
+                                     DType *q_rope,
+                                     DType *k_rope,
+                                     IdType *__restrict__ indptr,
+                                     IdType *__restrict__ offsets,
+                                     uint32_t batch_size,
+                                     uint32_t num_qo_heads,
+                                     uint32_t num_kv_heads,
+                                     uint32_t rotary_dim,
+                                     uint32_t head_dim,
+                                     size_t q_stride_n,
+                                     size_t q_stride_h,
+                                     size_t k_stride_n,
+                                     size_t k_stride_h,
+                                     size_t q_rope_stride_n,
+                                     size_t q_rope_stride_h,
+                                     size_t k_rope_stride_n,
+                                     size_t k_rope_stride_h,
+                                     bool interleave,
+                                     float rope_scale,
+                                     float rope_theta,
+                                     float low_freq_factor,
+                                     float high_freq_factor,
+                                     float old_context_length,
+                                     gpuStream_t stream = nullptr)
 {
     float rope_rcp_scale = 1.0f / rope_scale;
     float rope_rcp_theta = 1.0f / rope_theta;
@@ -1138,40 +1141,40 @@ cudaError_t BatchQKApplyLlama31Rotary(DType *q,
                             (void *)&smooth_b,
                             (void *)&rope_rcp_scale,
                             (void *)&rope_rcp_theta};
-            FLASHINFER_CUDA_CALL(cudaLaunchKernel((void *)kernel, nblks, nthrs,
-                                                  args, 0, stream));
+            FI_GPU_CALL(
+                gpuLaunchKernel((void *)kernel, nblks, nthrs, args, 0, stream));
         });
     });
 
-    return cudaSuccess;
+    return gpuSuccess;
 }
 
 template <typename DType, typename IdType>
-cudaError_t BatchQKApplyLlama31RotaryPosIds(DType *q,
-                                            DType *k,
-                                            DType *q_rope,
-                                            DType *k_rope,
-                                            IdType *pos_ids,
-                                            uint32_t nnz,
-                                            uint32_t num_qo_heads,
-                                            uint32_t num_kv_heads,
-                                            uint32_t rotary_dim,
-                                            uint32_t head_dim,
-                                            size_t q_stride_n,
-                                            size_t q_stride_h,
-                                            size_t k_stride_n,
-                                            size_t k_stride_h,
-                                            size_t q_rope_stride_n,
-                                            size_t q_rope_stride_h,
-                                            size_t k_rope_stride_n,
-                                            size_t k_rope_stride_h,
-                                            bool interleave,
-                                            float rope_scale,
-                                            float rope_theta,
-                                            float low_freq_factor,
-                                            float high_freq_factor,
-                                            float old_context_length,
-                                            cudaStream_t stream = nullptr)
+gpuError_t BatchQKApplyLlama31RotaryPosIds(DType *q,
+                                           DType *k,
+                                           DType *q_rope,
+                                           DType *k_rope,
+                                           IdType *pos_ids,
+                                           uint32_t nnz,
+                                           uint32_t num_qo_heads,
+                                           uint32_t num_kv_heads,
+                                           uint32_t rotary_dim,
+                                           uint32_t head_dim,
+                                           size_t q_stride_n,
+                                           size_t q_stride_h,
+                                           size_t k_stride_n,
+                                           size_t k_stride_h,
+                                           size_t q_rope_stride_n,
+                                           size_t q_rope_stride_h,
+                                           size_t k_rope_stride_n,
+                                           size_t k_rope_stride_h,
+                                           bool interleave,
+                                           float rope_scale,
+                                           float rope_theta,
+                                           float low_freq_factor,
+                                           float high_freq_factor,
+                                           float old_context_length,
+                                           gpuStream_t stream = nullptr)
 {
     float rope_rcp_scale = 1.0f / rope_scale;
     float rope_rcp_theta = 1.0f / rope_theta;
@@ -1212,12 +1215,12 @@ cudaError_t BatchQKApplyLlama31RotaryPosIds(DType *q,
                             (void *)&smooth_b,
                             (void *)&rope_rcp_scale,
                             (void *)&rope_rcp_theta};
-            FLASHINFER_CUDA_CALL(cudaLaunchKernel((void *)kernel, nblks, nthrs,
-                                                  args, 0, stream));
+            FI_GPU_CALL(
+                gpuLaunchKernel((void *)kernel, nblks, nthrs, args, 0, stream));
         });
     });
 
-    return cudaSuccess;
+    return gpuSuccess;
 }
 
 } // namespace flashinfer

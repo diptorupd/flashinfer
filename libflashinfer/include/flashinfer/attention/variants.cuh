@@ -20,7 +20,7 @@
 #include <cstdint>
 #include <type_traits>
 
-#include "../math.cuh"
+#include "../../gpu_iface/math_ops.hpp"
 #include "../utils.cuh"
 #include "variant_helper.cuh"
 
@@ -53,15 +53,16 @@ struct DefaultAttention : AttentionVariantBase
         kv_len = params.get_kv_len(batch_idx);
         if constexpr (use_logits_soft_cap) {
             soft_cap_pre_tanh_scale =
-                params.sm_scale * math::ptx_rcp(params.logits_soft_cap);
-            sm_scale_log2 = math::log2e * params.logits_soft_cap;
+                params.sm_scale *
+                gpu_iface::math::ptx_rcp(params.logits_soft_cap);
+            sm_scale_log2 = gpu_iface::math::log2e * params.logits_soft_cap;
         }
         else {
             if constexpr (use_alibi) {
-                sm_scale_log2 = math::log2e;
+                sm_scale_log2 = gpu_iface::math::log2e;
             }
             else {
-                sm_scale_log2 = params.sm_scale * math::log2e;
+                sm_scale_log2 = params.sm_scale * gpu_iface::math::log2e;
             }
         }
         if constexpr (use_custom_mask) {
@@ -94,7 +95,8 @@ struct DefaultAttention : AttentionVariantBase
                              float(int(kv_idx) - int(qo_idx));
             }
             if constexpr (use_logits_soft_cap) {
-                logits = float(math::tanh(logits * soft_cap_pre_tanh_scale));
+                logits = float(
+                    gpu_iface::math::tanh(logits * soft_cap_pre_tanh_scale));
             }
             return logits;
         })
