@@ -1,6 +1,13 @@
 # Include the custom torch extension helper module
 include(ConfigureTorchExtension)
 
+if(FLASHINFER_ENABLE_CUDA)
+  target_compile_definitions(flashinfer_kernels PRIVATE FLASHINFER_ENABLE_CUDA)
+elseif(FLASHINFER_ENABLE_HIP)
+  target_compile_definitions(_flashinfer_hip_kernels
+                             PRIVATE FLASHINFER_ENABLE_HIP)
+endif()
+
 # Source files for PyTorch extensions
 file(
   GLOB
@@ -22,13 +29,10 @@ file(
   "${CMAKE_CURRENT_SOURCE_DIR}/flashinfer_ops.cu",
   "${CMAKE_CURRENT_SOURCE_DIR}/custom_all_reduce.cu")
 
-file(GLOB DECODE_KERNEL_CUDA_SOURCES
-     "${CMAKE_CURRENT_SOURCE_DIR}/single_decode.cu"
-     "${CMAKE_CURRENT_SOURCE_DIR}/batch_decode.cu")
-
-file(GLOB DECODE_KERNEL_HIP_SOURCES
-     "${CMAKE_CURRENT_SOURCE_DIR}/single_decode.hip"
-     "${CMAKE_CURRENT_SOURCE_DIR}/batch_decode.hip")
+file(GLOB KERNEL_HIP_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/single_decode.hip"
+     "${CMAKE_CURRENT_SOURCE_DIR}/batch_decode.hip"
+     # "${CMAKE_CURRENT_SOURCE_DIR}/flashinfer_rocm_ops.hip") # TODO
+)
 
 # SM90-specific sources
 file(
@@ -46,10 +50,13 @@ file(
   "${CMAKE_CURRENT_SOURCE_DIR}/group_gemm_e5m2_bf16_sm90.cu")
 
 # Common include directories
-set(COMMON_INCLUDE_DIRS
+set(COMMON_CUDA_INCLUDE_DIRS
     ${FLASHINFER_INCLUDE_DIR} ${CUTLASS_INCLUDE_DIRS} ${TORCH_INCLUDE_DIRS}
     ${FLASHINFER_GENERATED_SOURCE_DIR} ${FLASHINFER_GENERATED_SOURCE_DIR_ROOT})
 
+set(COMMON_HIP_INCLUDE_DIRS
+    ${FLASHINFER_INCLUDE_DIR} ${TORCH_INCLUDE_DIRS}
+    ${FLASHINFER_GENERATED_SOURCE_DIR} ${FLASHINFER_GENERATED_SOURCE_DIR_ROOT})
 # Common compile definitions
 set(COMMON_COMPILE_DEFS
     $<$<BOOL:${FLASHINFER_ENABLE_FP8_E4M3}>:FLASHINFER_ENABLE_FP8_E4M3>
@@ -68,38 +75,17 @@ else()
 endif()
 
 # cmake-format: off
-# add_cuda_torch_extension(
-#   EXT_NAME flashinfer_kernels
-#   SOURCES
-#     ${KERNEL_SOURCES}
-#   INCLUDE_DIRS
-#     ${COMMON_INCLUDE_DIRS} ${TORCH_INCLUDE_DIRS}
-#   LINK_LIBS
-#     ${COMMON_LIBS}
-#     $<$<TARGET_EXISTS:flashinfer::decode_kernels>:flashinfer::decode_kernels>
-#     $<$<TARGET_EXISTS:flashinfer::prefill_kernels>:flashinfer::prefill_kernels>
-#   COMPILE_FLAGS
-#     $<$<COMPILE_LANGUAGE:CXX>:-Wno-switch-bool>
-#     $<$<COMPILE_LANGUAGE:CUDA>:${TORCH_EXT_NVCC_FLAGS}>
-#     $<$<BOOL:${CXX11_ABI_DEF}>:-D${CXX11_ABI_DEF}>
-#   PY_LIMITED_API ${FLASHINFER_PY_LIMITED_API}
-#   MIN_PYTHON_ABI "${FLASHINFER_MIN_PYTHON_ABI}"
-# )
-
 if(FLASHINFER_ENABLE_HIP)
     # Build an extension only with the decode kernels
     add_hip_torch_extension(
-      EXT_NAME _flashinfer_decode_kernels
+      EXT_NAME _flashinfer_hip_kernels
       SOURCES
-        ${DECODE_KERNEL_HIP_SOURCES}
+        ${KERNEL_HIP_SOURCES}
       INCLUDE_DIRS
-        ${FLASHINFER_INCLUDE_DIR}
-        ${TORCH_INCLUDE_DIRS}
-        ${FLASHINFER_GENERATED_SOURCE_DIR}
-        ${FLASHINFER_GENERATED_SOURCE_DIR_ROOT}
+        ${COMMON_HIP_INCLUDE_DIRS}
       LINK_LIBS
         ${COMMON_LIBS}
-        $<$<TARGET_EXISTS:flashinfer::decode_kernels>:flashinfer::decode_kernels>
+        $<$<TARGET_EXISTS:flashinfer::decode_kernels>:flashinfer::decode_kernels> # FIXME: We should generate libdecode_kernels_hip.a
       COMPILE_FLAGS
         $<$<COMPILE_LANGUAGE:CXX>:-Wno-switch-bool>
         $<$<BOOL:${CXX11_ABI_DEF}>:-D${CXX11_ABI_DEF}>
@@ -109,17 +95,15 @@ if(FLASHINFER_ENABLE_HIP)
 elseif(FLASHINFER_ENABLE_CUDA)
   # Build an extension only with the decode kernels
   add_cuda_torch_extension(
-    EXT_NAME _flashinfer_decode_kernels
+    EXT_NAME flashinfer_kernels
     SOURCES
-      ${DECODE_KERNEL_CUDA_SOURCES}
+      ${KERNEL_SOURCES}
     INCLUDE_DIRS
-      ${FLASHINFER_INCLUDE_DIR}
-      ${TORCH_INCLUDE_DIRS}
-      ${FLASHINFER_GENERATED_SOURCE_DIR}
-      ${FLASHINFER_GENERATED_SOURCE_DIR_ROOT}
+      ${COMMON_CUDA_INCLUDE_DIRS}
     LINK_LIBS
       ${COMMON_LIBS}
       $<$<TARGET_EXISTS:flashinfer::decode_kernels>:flashinfer::decode_kernels>
+      $<$<TARGET_EXISTS:flashinfer::prefill_kernels>:flashinfer::prefill_kernels>
     COMPILE_FLAGS
       $<$<COMPILE_LANGUAGE:CXX>:-Wno-switch-bool>
       $<$<COMPILE_LANGUAGE:CUDA>:${TORCH_EXT_NVCC_FLAGS}>
