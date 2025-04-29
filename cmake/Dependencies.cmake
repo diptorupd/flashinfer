@@ -182,7 +182,7 @@ if(FLASHINFER_ENABLE_CUDA)
 endif()
 
 # === Python dependencies for PyTorch extensions ===
-if(FLASHINFER_AOT_TORCH_EXTS_CUDA)
+if(FLASHINFER_AOT_TORCH_EXTS)
   find_package(
     Python
     COMPONENTS Interpreter Development.Module
@@ -194,7 +194,11 @@ if(FLASHINFER_AOT_TORCH_EXTS_CUDA)
     OUTPUT_VARIABLE TORCH_CMAKE_PREFIX COMMAND_ECHO STDOUT
     OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL ANY)
   set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH};${TORCH_CMAKE_PREFIX})
-  find_package(CUDA)
+
+  if(FLASHINFER_ENABLE_CUDA)
+    find_package(CUDA)
+  endif()
+
   # Find PyTorch
   find_package(Torch REQUIRED)
 

@@ -18,17 +18,15 @@
 flashinfer_option(FLASHINFER_BUILD_KERNELS
   "Build and install kernel libraries (required for AOT PyTorch extensions)" OFF)
 
-# PyTorch CUDA extensions for Python bindings
-# These provide high-performance operations through precompiled kernels
-flashinfer_option(FLASHINFER_AOT_TORCH_EXTS_CUDA
-  "Build ahead-of-time compiled PyTorch CUDA extensions (requires FLASHINFER_BUILD_KERNELS)" OFF)
-
-flashinfer_option(FLASHINFER_AOT_TORCH_EXTS_HIP
-  "Build ahead-of-time compiled PyTorch HIP extensions (requires FLASHINFER_BUILD_KERNELS)" OFF)
-
 flashinfer_option(FLASHINFER_TVM_BINDING "Build TVM binding support" OFF)
 flashinfer_option(FLASHINFER_DISTRIBUTED "Build distributed support" OFF)
 flashinfer_option(FLASHINFER_BUILD_WHEELS "Build distributed support" ON)
+
+# PyTorch extensions for kernels that use libflashinfer. The AOT extensions will
+# be built automatically for either CUDA or HIP based on the FLASHINFER_ENABLE_CUDA
+# or FLASHINFER_ENABLE_HIP options.
+flashinfer_option(FLASHINFER_AOT_TORCH_EXTS
+  "Build ahead-of-time compiled PyTorch CUDA/HIP extensions (requires FLASHINFER_BUILD_KERNELS)" OFF)
 
 # === DATA TYPE OPTIONS ===
 flashinfer_option(FLASHINFER_ENABLE_FP8 "Enable FP8 data type support" ON)
@@ -82,25 +80,20 @@ flashinfer_option(FLASHINFER_HIP_ARCHITECTURES "HIP architectures to compile for
 
 # === AUTO-DERIVED OPTIONS ===
 
+if(FLASHINFER_AOT_TORCH_EXTS AND NOT (FLASHINFER_ENABLE_CUDA OR FLASHINFER_ENABLE_HIP))
+  message(FATAL_ERROR "Building AOT PyTorch extensions require "
+  "FLASHINFER_ENABLE_CUDA or FLASHINFER_ENABLE_HIP to be specified.")
+endif()
+
 # PyTorch extensions require kernels to be built
-if((FLASHINFER_AOT_TORCH_EXTS_CUDA OR FLASHINFER_AOT_TORCH_EXTS_HIP) AND NOT FLASHINFER_BUILD_KERNELS)
+if(FLASHINFER_AOT_TORCH_EXTS AND NOT FLASHINFER_BUILD_KERNELS)
   message(STATUS "Building AOT PyTorch extensions require FLASHINFER_BUILD_KERNELS, enabling it")
   set(FLASHINFER_BUILD_KERNELS ON CACHE BOOL "Build kernels (required by PyTorch extensions)" FORCE)
 endif()
 
-if(FLASHINFER_AOT_TORCH_EXTS_CUDA AND NOT FLASHINFER_ENABLE_CUDA)
-  message(STATUS "FLASHINFER_AOT_TORCH_EXTS_CUDA requires FLASHINFER_ENABLE_CUDA, enabling it")
-  set(FLASHINFER_ENABLE_CUDA ON CACHE BOOL "Build CUDA backend" FORCE)
-endif()
-
-if(FLASHINFER_AOT_TORCH_EXTS_HIP AND NOT FLASHINFER_ENABLE_HIP)
-  message(STATUS "FLASHINFER_AOT_TORCH_EXTS_HIP requires FLASHINFER_ENABLE_HIP, enabling it")
-  set(FLASHINFER_ENABLE_HIP ON CACHE BOOL "Build HIP backend" FORCE)
-endif()
-
 # Enabling both CUDA and HIP at the same time is not supported
 if(FLASHINFER_ENABLE_HIP AND FLASHINFER_ENABLE_CUDA)
-  message(FATAL_ERROR "Enabling both CUDA and HIP backends is not supported")
+  message(FATAL_ERROR "Enabling both CUDA and HIP backends at the same time is not supported.")
 endif()
 
 # Handle CUDA architectures
