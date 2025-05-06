@@ -1,0 +1,1071 @@
+[33m21336af[m[33m ([m[1;36mHEAD -> [m[1;32mfeature/kernel_launch_configurator[m[33m)[m launch configurator unit tests.
+[33mc98f8ab[m[33m ([m[1;31mamdeng/feature/kernel_launch_configurator[m[33m)[m Adds a kernel_launch_configurator factory design.
+[33mcbdfc32[m[33m ([m[1;32mfeature/gpu_iface_memory_ops[m[33m)[m Add abstractions for memory ops.
+[33mc7e7a08[m Minor housekeeping. (#23)
+[33mb7cf359[m Initial gpu interoperability interface for HIP/CUDA. (#22)
+[33mf2c3120[m Fixing Includes (#19)
+[33m4a6b5e0[m Remove unnecessary gitmodules. (#21)
+[33mabee839[m Fix header installation for editable installs. (#20)
+[33md13b18d[m HIPified Headers (#18)
+[33mdaf62e2[m Formatting/change clang format defaults (#17)
+[33m88319d0[m Port flashinfer build system to scikit-build-core. (#14)
+[33meafe751[m Generate configure.h during cmake configuration. (#11)
+[33m5ffccd3[m Update compiler flag variables to make it easier to read. (#10)
+[33mc0032b4[m Improve ProjectVersion.cmake to generate a full version as well. (#9)
+[33m7104fc5[m Feature/libflashinfer (#8)
+[33m83d1c74[m[33m ([m[1;31mdrd/main[m[33m, [m[1;31mamdeng/upstream/main[m[33m, [m[1;32morigin-main[m[33m, [m[1;32mdrd-main[m[33m, [m[1;32mamdeng-upstream/main[m[33m)[m feat: SM-constraint Communication Kernels (#994)
+[33m9220fb3[m doc: use latest protobuf for profiler (#1021)
+[33m9f08f22[m feat: update decode attention APIs (#1007)
+[33m32d44c0[m bugfix: import wrapper of mla decode (#1013)
+[33m55576c6[m misc: fix instrument code for mla profiler (#1014)
+[33mf579ca2[m misc: more benchmark scripts in Python (#1010)
+[33mdb0b975[m misc: fix kv-layout doc references (#1009)
+[33m73bf334[m bugfix: Fix illegal memory access due to custom mask ptr (#1008)
+[33m9c264c0[m misc: update REAMDME.md (#1003)
+[33m382a4d7[m ci: select 2_28 manylinux builder for new torch+cuda versions (#1000)
+[33m592b110[m[33m ([m[1;33mtag: v0.2.5[m[33m)[m release: bump version to v0.2.5 (#999)
+[33m9956c29[m perf: add `-DNDEBUG` compilation flag (#998)
+[33m25d67b5[m 3rdparty: upgrade cutlass to 3.9 (#997)
+[33m5751fc6[m feat: SM-constraint-GEMM by triton persistent kernel (#982)
+[33md7a9234[m perf: prefetch page indices for mla kernel (#991)
+[33m17ff5a7[m misc: fix devcontainer conda path (#989)
+[33m72f00bc[m ci: add torch 2.6+cu126 wheel (#985)
+[33m31cfe10[m misc: update devcontainer (#986)
+[33mafa9332[m ci: switch to on-demand instances if spot instance is interrupted (#987)
+[33m86da6b8[m misc: Rename `output_emitted_token_num` -> `output_emitted_draft_token_num` (#977)
+[33mbb028cc[m feat: Allow passing workspace base directory via environment variable (#973)
+[33m893172c[m triton: Triton `rms_norm` kernels (#983)
+[33m77ccda8[m misc: Use environment variable to control JIT verbose flag (#981)
+[33m3a69560[m bugfix: Fix compilation with FP16_QK_REDUCTION enabled. (#962)
+[33mbc81a59[m[33m ([m[1;33mtag: v0.2.4[m[33m)[m release: bump version to v0.2.4 (#980)
+[33m60d37b7[m perf: Use 2WG pipeline design for MLA implementation on Hopper (#952)
+[33me19cb7b[m perf: dual pivot top-p/top-k renorm (#974)
+[33m588c2fb[m benchmark: add sampling.renorm benchmarks (#970)
+[33m55a6668[m bugfix: Fix POD JIT bugs (#971)
+[33m61e049a[m perf: Fix python API overhead when CUDAGraph is not enabled (#969)
+[33mf65b93f[m feat: Added tvm binding for sampling kernel (#958)
+[33m86b12ad[m perf: reduce torch.library dispatch overhead (#968)
+[33mbb49fac[m doc: remove misleading docstring about `non_blocking` (#966)
+[33m034fc18[m bugfix: Fix compilation on cuda 12.2 (#961)
+[33m2be9ad7[m ci: improve jenkins (#943)
+[33m594febe[m misc: Temporarily disable POD from AOT wheels (#956)
+[33m30b2838[m bugfix: bugfix to #949 (#951)
+[33m211dfc6[m fix: fix pod-attention compilation time (#954)
+[33m6d5320b[m bugfix: Fix missing PyModuleDef field initializers (#946)
+[33m95e175a[m misc: add ci-badge, update blog list (#948)
+[33m27906fd[m fix - fix bug when not relevant seq has nan data (#942)
+[33m061db55[m bugfix: fix potential issues of FA3 template loading nans for PageAttention (#945)
+[33m39dc66d[m feat: Add POD-Attention to FlashInfer (#858)
+[33m672f00b[m feat: support mla kvcache store (#888)
+[33m534c3c9[m fix: Fix MLA TVM binding for the latest changes (#940)
+[33m3b07839[m bugfix: fix include header name conflict (#939)
+[33m676727f[m ci: setup Jenkins (#874)
+[33m8d29762[m ci: add pre-commit (#931)
+[33mf959354[m typo: remove another uniform samples leftover (#937)
+[33md462a9d[m typo: fix target_probs docs after uniform_samples removal (#935)
+[33m738460f[m typo: "specutate" typo (#934)
+[33m58e852a[m typo: fix pdl terminology (#933)
+[33mfdedc43[m[33m ([m[1;33mtag: v0.2.3[m[33m)[m release: bump version to v0.2.3 (#932)
+[33m841b4ad[m feat: experimenta support of PDL (#930)
+[33m29be596[m fix: undefined symbol cudaGetDriverEntryPointByVersion with CUDA >= 12.5 (#928)
+[33m1e2515e[m fix: add install step of profiler's dependency (#929)
+[33me3853dd[m perf: use max probability instead of 1 as upper bound in top-p/k sampling (#925)
+[33mfb578e7[m feat: improve sampling algorithm robustness (#923)
+[33m0daed1a[m feat: support non-contiguous input/output in normalization functions (#921)
+[33md4dc3f9[m sampling: dual pivot rejection sampling algorithm to improve top-p/top-k sampling efficiency (#912)
+[33md835e6f[m refactor: move triton dependency to flashinfer.triton (#918)
+[33mbf2fdc5[m [Package] Add tvm binding to `flashinfer.data` when packaging (#917)
+[33mc2719f6[m feat: flashinfer intra-kernel profiler (#913)
+[33m6d6bf27[m ci: bugfix on release-ci-docker github action (#910)
+[33m7ccb9d7[m ci: add dockerfile for CI (#909)
+[33m59bffad[m bugfix: Fix no return type error (#904)
+[33mf5dec3d[m feat: Naive Support for Hopper FP8 Prefill Kernel with Per-Head Quantization (#869)
+[33m1dba037[m release: bump version v0.2.2.post1 (#902)
+[33m0ed1ce8[m perf: tweak the pipeline design of mla kernel (#901)
+[33me4a68e4[m perf: use f16 as split-k partial output data type (#900)
+[33m1e330b7[m perf: fix MLA split-k performance bug (#898)
+[33m56e56ea[m perf: tweak register amount for producer/consumer in MLA template (#896)
+[33m22f3c87[m fix: pin_memory use cpu as default device (#895)
+[33m341ae09[m perf: fix the performance of stage stage of split-k (#894)
+[33m28053ac[m release: bump version to v0.2.2 (#891)
+[33m977d3fe[m unittest: add unittests for MLA + cudagraph (#890)
+[33mdc18f66[m typo: Fixing several typos in doc file kv_layout.rst (#884)
+[33mce34c1f[m [JIT] Fix MLA header in TVM binding (#889)
+[33m2b24293[m perf: FlashAttention-3 style MLA PageAttention (#887)
+[33m26c0296[m [Hotfix] Add flashinfer.jit.attention into packages (#881)
+[33mdf05064[m jit: JIT compilation support for TVM (#880)
+[33m1605eaa[m misc:Remove unused k_smem_offset_w update in MLA kernel (#878)
+[33m68a0378[m [API] Fix top_k_top_p_sampling_from_logits param typo (#875)
+[33m78dde79[m bugfix: fix geneate_dispatch_inc args from parser (#870)
+[33m7e06dc0[m add lightllm adoption (#871)
+[33mfbb3135[m typo: fix a bunch of typos. (#862)
+[33m6ec3bae[m bugfix: fix the behavior of MLA kernel when kv-length is 0 (#868)
+[33m7cd000b[m unittest: add MLA test cases where kv_len is evenly divided by page_size. (#861)
+[33m672c211[m fix cu121 torch2.6 (#867)
+[33m8127793[m[33m ([m[1;33mtag: v0.2.1.post2[m[33m)[m fix compile (#866)
+[33m3a5ae0b[m chore: bump v0.2.1.post2 (#865)
+[33m55d249f[m Revert "fix: Pass backend in BatchPrefillWith*KVCacheWrapper.plan() (… (#864)
+[33m41a4f56[m perf: dynamic split-k for MLA (#863)
+[33m127ff22[m bugfix: fix some compiler pre-check. (#859)
+[33m1231080[m update ci (#857)
+[33m5168308[m typo: update `decode_maybe_q_rope_offset` (#856)
+[33mea1d0cb[m Unique the symbol of maybe_q_rope_offset_v. (#855)
+[33m7bee1cf[m feat: adding `out` and `lse` parameters to `run` functions to allow user allocated output buffer (#854)
+[33m55b75d8[m misc: Remove duplicate param set in MLA kernel (#850)
+[33m1161b12[m bugfix: Fix inline RoPE in decode kernels (#847)
+[33mab6484e[m fix: Pass backend in BatchPrefillWith*KVCacheWrapper.plan() (#808)
+[33m95b3390[m typo: update installation.rst: fixing 2 typos (#840)
+[33m88e3dee[m perf: MLA decode kernel implemented by CuTe targeted to SM80 (#844)
+[33mb19ad91[m misc: adds `TensorRT-LLM` to the list of projects adopting FlashInfer (#843)
+[33m48ad0c0[m typo: fixing readme typo (#842)
+[33m044af86[m typo: page.rst fixing 1 typo (#841)
+[33m921267e[m typo: update README.md: fixing a typo for "hierical" (#836)
+[33m059001b[m docs: update installation (#839)
+[33m79fd1ae[m use 3 latest pytorch version (#835)
+[33m6805c64[m[33m ([m[1;33mtag: v0.2.1.post1[m[33m)[m set pip path (#834)
+[33m48c4f40[m fix release wheel (#833)
+[33m46e7897[m fix #824 (#832)
+[33mc79bb1c[m chore: bump v0.2.1.post1 (#831)
+[33m27f184b[m update release wheel (#830)
+[33mcca3e61[m bugfix: update `clear_cache_dir` in JIT (#829)
+[33me80ad8a[m misc: fix parameters name (#817)
+[33m770126f[m bugfix: Another bugfix for torch.library (#828)
+[33m2076f72[m redo ci: cross python wheel (#824)
+[33mfdda958[m bugfix: fix the signature of `CutlassSegmentGEMMSM90` (#827)
+[33m39323cd[m doc: Fix the incorrect DeepSeek-V3 paper link (#826)
+[33mdbb1e4e[m[33m ([m[1;33mtag: v0.2.1[m[33m)[m refactor: change to TORCH_LIBRARY (#823)
+[33mc716aed[m hotfix: bugfix on #812 (#822)
+[33md7cf5d2[m bugfix: bugfix on sm89 MLA (#821)
+[33m7fa167b[m Revert "refactor: change to TORCH_LIBRARY" (#820)
+[33mdb602a0[m refactor: change to TORCH_LIBRARY (#764)
+[33m986dc07[m release: bump version to v0.2.1 (#819)
+[33m88fa03f[m doc: improve mla related documentation (#818)
+[33m5094eb7[m bugfix: fix the behavior of mla plan function when provided with host tensors (#816)
+[33m2197b5a[m misc: fix sphinx (#815)
+[33m3de690a[m feat: unlock MLA attention for sm89 (L40/L40s/4090) (#814)
+[33me1880b1[m feat: cudagraph-compatible MLA API (#813)
+[33ma00165c[m feat: unlocking MLA for A100 (#812)
+[33mfbaaed3[m doc: add documentation to new MLA interface (#811)
+[33md8a9b6d[m bugfix: mla page-attention kernel for different page sizes (#810)
+[33m106e6fc[m perf: memory efficient deepseek mla fused page-attention kernel (#804)
+[33m8b91e95[m bugfix: mla decode failed under cuda graph mode, and update test case (#803)
+[33m0547781[m feat: apply sm_scale at logits instead of q in FA2 template (#801)
+[33m32388d0[m feat: support f32 attention output in FA2 template (#799)
+[33m824ce40[m Fix the type annotation of q_dtype and kv_dtype on ragged prefill (#798)
+[33meb69778[m bugfix: fix aot build not compatible with cmake command (#796)
+[33m0206ade[m test: add unittest comparing deepseek prefill fa2 & 3 implementation (#797)
+[33m4127635[m bugfix: Fix arguments of `plan` for split QK/VO head dims (#795)
+[33m504b990[m fix rope logic in mla decoding (#793)
+[33m23413e0[m bugfix: MLA decode should multiply sm_scale by math::log2e (#787)
+[33m9569106[m refactor: make `group_size` a part of params (#786)
+[33m83bab99[m bugfix: drop CTA_TILE_Q=32 (#785)
+[33m2d2e13a[m misc: allow head_dim=64 for sm90 AOT (#783)
+[33m088e81f[m misc: remove head dimension 64 from AOT (#782)
+[33m74a4054[m bugfix: fix batch prefill attention kernel unittests (#781)
+[33m1ebbde3[m feat: Separate QK/VO head dim dispatch for sm90 AOT (#778)
+[33mfc03772[m perf: refactor fa2 prefill template (#776)
+[33m0ca046a[m ci: change whl folder to flashinfer-python (#779)
+[33mc04755e[m bugfix: fix the JIT warmup arguments in unittests (#775)
+[33ma0443d5[m bugfix: Ensure Loop Termination by Enforcing IEEE-754 Compliance in Sampling Kernels (#774)
+[33m090b100[m hotfix: follow up of #772 (#773)
+[33m3052944[m refactor: change the structure of attention updater (#772)
+[33meb660de[m feat: support deepseek prefill attention shape (#765)
+[33m44ee479[m misc: addressing the package renaming issues (#770)
+[33m200e954[m[33m ([m[1;33mtag: v0.2.0.post2[m[33m)[m Version bump: v0.2.0.post2 (#768)
+[33maeabaf7[m bugfix: Fix block-sparse attention API (#767)
+[33me5a3bef[m bugfix: use actual sm count for num_sm90_ctas (#762)
+[33m0e25eb2[m fix: match statement not supported in Python 3.8 (#759)
+[33m4f1f089[m refactor: Change `apply_rope_with_cos_sin_cache` to accept `cos_sin_cache` (#754)
+[33m68d1177[m hotfix: bugfix to #756 (#757)
+[33maa9c5d9[m ci: add dev container for easier development (#680)
+[33m5243043[m bugfix: fix pin memory device (#755)
+[33maab8715[m [bugfix] Fix cpp tests/benchmarks (#753)
+[33m6e6f38d[m bugfix: various AOT issues (#752)
+[33me840db1[m Filter out unsupported head dim for sm90 (#751)
+[33m2d03ed7[m lint: Fix some linting issues and provide automatic format check script  (#743)
+[33m0129159[m refactor: Move allocations out of torch ops (#740)
+[33m93e1a26[m [Refactor] Unify JIT/Customization/AOT mode (#748)
+[33m4e8eb18[m fix return type of cuBLAS (#749)
+[33ma0e99a3[m doc: Add a note about int32/int64 datatypes to the `kv_layout` tutorial (#737)
+[33m9f5fbee[m ci: rename python package name to `flashinfer-python` (#729)
+[33m00ba0ae[m bugfix: Align KV chunk size binary search with actual KV chunk splitting. (#728)
+[33m13de896[m misc: Finer-grained control over fp16/fp8 builds (#722)
+[33m06309c4[m bugfix: Choose sm90 kernels only for Hopper GPUs. (#719)
+[33m9a00cc2[m bugfix: FusedAddRMSNorm kernels might require more than 48KB shared memory when d is large. (#718)
+[33mf72745b[m feature: Triton implementation of `silu_and_mul` (#716)
+[33mdef019e[m bugfix: fix min-p AOT compilation in #713 (#717)
+[33m989dbfa[m perf: fix the iteration bound of SWA in FA2 prefill template (#714)
+[33m0f80329[m sampling: simplify min-p sampling (#713)
+[33m561f646[m misc: add bibtex reference (#712)
+[33m644ccd7[m ci: Improve compatibility with pytorch 2.5 (#711)
+[33mccd3be9[m hotfix: revert torch.library register (#709)
+[33m4ba91c0[m Customizable SM90 prefill kernels. (#704)
+[33m1312409[m misc: remove release-please workflow (#705)
+[33m1c8dc36[m bugfix: only use sm90 group gemm when torch cuda >= 12.3 (#699)
+[33md158717[m bugfix: casting int array to int32 for rope input arguments (#697)
+[33m398cd2b[m ci: fix the update_whl_index script to regonize version number with "post" and add torch2.5 (#694)
+[33m63fa200[m release: bump version to v0.2.0.post1 (#691)
+[33mdb8f04d[m hotfix: accelerate plan speed of fa3 template (#690)
+[33mbcf7a3e[m bugfix: bug fix on `determine_attention_backend` condition (#688)
+[33m3470329[m[33m ([m[1;33mtag: v0.2.0[m[33m)[m ci: Pass FLASHINFER_ENABLE_SM90 to setup.py (#685)
+[33m5da7271[m ci: change sm90 minimal requirement to cu123 (#684)
+[33m0483042[m ci: disable sm90 for cuda11 (#683)
+[33m58a0944[m bugfix: Revert "ci: cross python wheel (#662)" (#681)
+[33md7ac8e3[m [small] Fix norm option in config.cmake (#679)
+[33mcaeb3d3[m Fix CMake build (#678)
+[33m2bc3214[m chore(main): release 0.2.0 (#476)
+[33m6188435[m doc: update readme (#677)
+[33ma7756dc[m doc: expose MLA decode API to documentation (#676)
+[33m124daea[m bugfix: Fix SWA Implementation Hanging Issue (#673)
+[33md4e8d79[m feat: add JIT compilation support for FA3 templates (#672)
+[33md2ebd1e[m ci: Revert setuptools-scm (#671)
+[33m8f92670[m bugfix: fix JIT compilation of batch prefill attention kernels (#670)
+[33m73aa00e[m bugfix: Fix setuptools-scm related issues. (#668)
+[33m08405a5[m packaging: Use setuptools-scm (#666)
+[33m51236c9[m perf: Dense and sparse customizable flashattention-3 template (#667)
+[33md9d8eb1[m bugfix: fix AOT mode unittests (#665)
+[33mb1b1fb8[m ci: cross python wheel (#662)
+[33m56f8eca[m bugfix: Fix FLASHINFER_BUILD_VERSION in nightly build (#660)
+[33m16549dc[m build: Ninja as a dependency in JIT mode (#659)
+[33med89d24[m doc: Fix and update doc builder (#658)
+[33m6dfc9d8[m bugfix: fix unittests not yield error in AOT mode (#657)
+[33m4c15777[m bugfix: Fix the computation of `total_num_tiles_q` (#652)
+[33m4313654[m bugfix: fix type annotation error in python3.8 (#656)
+[33ma693507[m bugfix: Fix Documentation Build Proces (#655)
+[33me07c4a3[m packaging: add ninja to dependencies (#654)
+[33m8e3d258[m refactor: modernize packaging (#643)
+[33m1b998c3[m bugfix: Fix MLA decode error having v_scale without return_lse (#650)
+[33m0cc1a51[m feat: specify gemm backend (#648)
+[33m553ace5[m perf: reduce total_num_tiles_q by one (#644)
+[33mb577710[m bugfix: fix smem_size in FusedAddRMSNorm which is missed in PR #636  (#646)
+[33m6819a0f[m bugfix: Fix the batch size & kv indptr calculation (#641)
+[33m4ade6f3[m Fix the indptr name in the ragged kernel (#642)
+[33m42b9874[m bugfix: Fix the batch size/seq len args for the decode kernel with tensor cores (#640)
+[33m86ca89a[m feat: fix the maximal grid dimension in prefill planning with CUDA graphs (#639)
+[33m5fe9f7d[m feat: pass a dynamic token count to the cascade kernels (#635)
+[33mdb9c48d[m bugfix: fix the misaligned address bug of norm kernels for certain shapes (#636)
+[33mae501ed[m bugfix: fix sliding window attention tests of ragged attention api (#633)
+[33ma059586[m perf: speedup jit compilation of prefill attention kernels (#632)
+[33m5bf36ce[m misc: remove duplicate norm cuda kernels (#631)
+[33m6ec4db3[m misc: add page ops to shared-prefix kernel unittest warmup function (#630)
+[33m8f5f349[m feat: warmup for jit kernel tests (#629)
+[33m92ac440[m feat: allow the cascade kernels to be executed using varying sequence lenghts (#627)
+[33mf5842b8[m jit: further accelerate compilation by spliting files and multi-threading (#628)
+[33m9cba9fb[m bugfix: fix append_paged_kv_cache test (#625)
+[33mba1d8c3[m bugfix: fix prefill kernel uris for aot compilation (#624)
+[33m3ed9a8b[m hotfix: fix aot compilation after #618 (#623)
+[33m560af6f[m feat: add an option `non_blocking` to plan function (#622)
+[33mf236f70[m refactor: rename num_frags to num_mma (#621)
+[33mcbe65a9[m bugfix: fix MLA with new JIT pipeline (#620)
+[33mb27a2cc[m bugfix: fix the rope correctness issue introduced in #609 (#619)
+[33meaf73fd[m perf: accelerate JIT compilation speed (#618)
+[33mdd3c836[m bugfix: Fix compile error of OptionalCUDAGuard and device_of (#613)
+[33mb53a46f[m misc: add device guard for kernels (#611)
+[33ma3360ff[m Fix potential multi-process compile issue (#610)
+[33mff05155[m perf: improve parallelism in RoPE with pos_ids (#609)
+[33m32d9510[m bugfix: fix the alignment of o_frag (#608)
+[33m45e9273[m test: add DtypeKV template param in bench_batch_decode (#607)
+[33mbe10bbd[m doc: improve the docstring of `append_paged_kv_cache` (#606)
+[33mfe4f898[m feat: simplify prefill JIT compilation (#605)
+[33mbb67144[m doc: update readme (#604)
+[33md305d56[m doc: update documentation index (#603)
+[33m595cf60[m perf: fix prefill kernel performance degradation (step 1) (#602)
+[33m3dd9405[m hotfix: fix rope tvm wrapper (#601)
+[33meb9bc71[m feat: add `rotary_dim` argument to rope APIs for partial apply rope (#599)
+[33m2043ca2[m perf: reduce the read and write of shared memory in the FusedAddRMSNormKernel (#592)
+[33m1058d1e[m hotfix: fix import issue in #597 (#598)
+[33mf5621d3[m Fix the type of `paged_kv_cache` in append (#597)
+[33m3467617[m misc: refactor cutlass includes (#594)
+[33mce44799[m [doc] mock triton import (#593)
+[33m9430a8a[m misc: refactor group gemm API (#545)
+[33mc7dc921[m feat: improve the precision of the FusedAddRMSNormKernel function (#587)
+[33md7300c4[m benchmark: include convert latency in bench_append_paged_kv_cache (#590)
+[33me15f7c9[m perf: fix the performance issue of `append_paged_kv_cache` (#588)
+[33m1328693[m bugfix: gemm_sm90 compilation error (#589)
+[33m2332e8a[m feat: CUDAGraph compatibility of multi-level cascade inference APIs (#586)
+[33m83e541d[m feat: support cached cos/sin in rope APIs (#585)
+[33m7557dc8[m bugfix: fix broken tvm integration caused by #568 (#582)
+[33m979bb6c[m ci: setup pre-commit (#584)
+[33me5cafde[m add benchmark for append_paged_kv_cache (#583)
+[33mc3572de[m misc: simplifying sampilng data structures (#581)
+[33m98a5483[m bugfix: symlinks not set up properly in setup.py (#580)
+[33mc83cd6c[m bugfix: workspace dir when no GPU is available (#579)
+[33mfc0f6d4[m misc: return type overload for return_lse (#578)
+[33m5d454ed[m feat: support MLA decode (#551)
+[33m06a922f[m doc: fix sphinx (#573)
+[33mf19e308[m fix broken cpp integration caused by #567 (#572)
+[33m7df90dd[m refactor: Refactor JIT and AOT build script (#567)
+[33me46d9a7[m bugfix: fix broken cpp integration caused by #553 (#570)
+[33m3e104bc[m feat: torch custom_op fix for rope (#569)
+[33m4f40420[m feat: support huggingface transformer style rope interface (#568)
+[33mcdc12c3[m Change workspace dir (#566)
+[33md30667b[m bugfix: do not use non-blocking copy for gpu to cpu transfer (#564)
+[33m4800368[m bugfix: fix the sliding window iteration bound for SWA in batch prefill operators (#563)
+[33m9d2996d[m bugfix: bugfix for torch library annotation (#562)
+[33m7a7ad46[m perf: remove unnecessary contiguous operation in block sparse attention (#561)
+[33m3fbf028[m perf: use cuda-core implemention for io-bound block-sparse attention (#560)
+[33mea86f81[m bugfix: fix `batch_prefill.cu` in AOT mode after #554 (#559)
+[33m6227562[m feat: add group size 3 to GQA decode dispatch (#558)
+[33m9e10936[m misc: typing improvement (#555)
+[33m9bf916f[m feat: torch.compile and custom_op support (#554)
+[33m2989556[m bugfix: fix block sparse wrappers (#556)
+[33m89f2c4a[m feat: non-contiguous query with paged kv cache (#553)
+[33mf6e0010[m feat: torch custom_op support: norm (#552)
+[33m47583b3[m fix SyntaxWarning (#548)
+[33mb2a9e16[m bugfix: Fix the default value of `data_type` in batch decode plan function (#544)
+[33m41ebe6d[m perf: improve plan performance by using non-blocking memcpy (#547)
+[33m021b585[m bugfix: fix jit compilation for single decode with tensor cores (#546)
+[33m78e26e4[m bugfix: backward compatibility (#542)
+[33mb878508[m bugfix: Fix the "not enough values to unpack" error. (#540)
+[33md0b0b7f[m Add file lock before op JIT. (#539)
+[33m3f5f20f[m misc: replace `is_same` with `is_same_v` (#538)
+[33me7010e3[m misc: Improve scheduler error checking (#537)
+[33m425040c[m bugfix: fix JIT compilation of prefill kernels (#536)
+[33mde25d76[m jit: simplify jit example (#535)
+[33mc71c69b[m jit: adding more examples (#534)
+[33md81af97[m feat: add a `use_softmax` field in variant class (#533)
+[33m7bb53d9[m bugfix: check whether the qkv data type matches in plan and run functions (#532)
+[33mddef3f3[m Prefetch device transfer for ptrs to CPU (#529)
+[33m93b5d4e[m bugfix: fix the stride bug in page append (#527)
+[33m0dcd505[m doc: add documentation for installation in JIT/AOT mode (#526)
+[33mc7cd8ea[m misc: remove unused functions in prefill parameters (#525)
+[33md0a1d0d[m bugfix: remove 2x2 warp layout introduced in #518 (#523)
+[33m0aa4726[m fix: AOT compiler flags on non-sm90 (#522)
+[33mc6d0f65[m refactor: remove unused template instantiation (#519)
+[33mca1fa7d[m refactor: remove warp layout enum (#518)
+[33m6e18209[m refactor: refactor `bmm_fp8.cuh` (#517)
+[33m85b1878[m Feature/non contiguous kv cache (#513)
+[33m794bdda[m feat: support sm90 cutlass group gemm (#509)
+[33m20265d6[m misc: remove unused includes (#516)
+[33m3613a5b[m feat: JIT compilation (#507)
+[33m2043692[m community: add link to slace workspace (#511)
+[33m90e42a7[m fix: batch decode kernel redundant store output to gmem (#505)
+[33m33ef957[m minor: add out parameter for rmsnorm and gemma_rmsnorm (#503)
+[33m8f186cf[m minor: refine norm (#498)
+[33m52dab1d[m feat: modify group-gemm stage number (#497)
+[33m2de16b0[m fix: remove redundant load (#495)
+[33mf2ca781[m include cstdint for compatibility (#494)
+[33m46ec893[m misc: optimize group_gemm test (#493)
+[33m8f71591[m bugfix: fix torch.testing.assert_close kwarg error (#492)
+[33m45eac04[m fix: update bmm fp8 test (#487)
+[33m77bff3f[m bugfix: fix the python 3.8 type error (#486)
+[33meebbea0[m misc: rename some functions (#483)
+[33mfd1ed2c[m minor: remove numpy dependency in tests (#480)
+[33ma8fadef[m Update README.md (#481)
+[33mac41d1b[m fix: compatible with torch 2.2 (#478)
+[33m1a6b17e[m feat: add gemma_rmsnorm and gemma_fused_add_rmsnorm (#477)
+[33m9ee26e7[m[33m ([m[1;33mtag: v0.1.6[m[33m)[m feat: add gelu_and_mul (#474)
+[33m2a6963f[m doc: tweak structure of kv layout documentation (#475)
+[33mbdf98ce[m hotfix: skip prefill kernels on sm75 for bf16 (#473)
+[33m5a5cb6a[m cmake: fix typo in CMakeLists.txt (#471)
+[33ma836e7e[m hotfix: Fix sm75 compilation issue for bf16 on cuda 11.8 & 12.1 (#472)
+[33ma23979b[m chore(main): release 0.1.6 (#447)
+[33md357a91[m doc: fix fp8 bmm documentation (#470)
+[33m3d38d0d[m bugfix: Fix sm75 kernel configuration (#449)
+[33mf1c0b68[m feat: support bmm fp8 (#469)
+[33m2ba3f1c[m doc: fix the use of exclude-members (#468)
+[33m78ec6db[m misc: use the new `plan`/`run` API for unittests (#467)
+[33md940d2e[m refactor: replace `begin_forward`/`forward`/`end_forward` with `plan`/`run` (#466)
+[33m957572e[m docs: improve cascade inference documentation (#465)
+[33mf40b255[m doc: another bunch of documentation improvement (#463)
+[33m1e37989[m feat: add `MultiLevelCascadeAttentionWrapper` API (#462)
+[33mc1f576a[m docs: add some documentation (#461)
+[33mbe6bf5b[m perf: use persistent kernel for merging attention states (#459)
+[33m048560d[m bugfix: fix the python api of prefill wrapper + custom mask (#460)
+[33m7c397cb[m perf: slight optimization on fragment layout swizzle (#458)
+[33m85b4c77[m misc: less syncthreads in renorm kernels (#457)
+[33m0dce178[m misc: improve error handling of sampling kernels (#456)
+[33m0d61871[m perf: slight optimization on f16->f8 fragment layout swizzling (#453)
+[33mfa38b5e[m feat: add accept num, emit num metric for ChainSpeculativeSampling (#450)
+[33m86c9e55[m docs: update README (#451)
+[33m338b2f5[m bugfix: fix the prefill/append attention kernel accuracy issue on sm75 (#448)
+[33m5f0159e[m fix: resolve cu121 compile wired issue (#446)
+[33m2740a02[m fix: resolve cu121 compile wired issue
+[33m838d050[m[33m ([m[1;33mtag: v0.1.5[m[33m)[m ci: set `MAX_JOBS` to 128 (#445)
+[33md07b19e[m bugfix: suppress warning #63-D: shift count is too large (#444)
+[33m7470edc[m chore(main): release 0.1.5 (#435)
+[33ma7ee566[m feat: decouple float and int workspace buffer (#442)
+[33m3fff008[m Fix PagedPrefill python api and some typos (#441)
+[33m6ac28f4[m bugfix: fix prefill kernels' lse result for empty kv-cache (#440)
+[33mc93f647[m perf: faster fp8->fp16 dequantization for pre sm_90 arch (#439)
+[33madcf701[m doc: add python 3.12 as supported python version (#438)
+[33mb91475b[m ci: upload python 3.12 scripts (#437)
+[33m9ca04e4[m[33m ([m[1;33mtag: v0.1.4[m[33m)[m ci: further reduce binary size (#436)
+[33m2c9d1c3[m feat: support fused gelu tanh mul (#434)
+[33m949c328[m hotfix: Only use hardware vector fp8 conversion instructions for sm90+ (#433)
+[33m1969433[m chore(main): release 0.1.4 (#415)
+[33mea0ba9a[m feat: support fused silu mul (#427)
+[33m68df9c4[m feat: more sampling operator options (#431)
+[33mdaa5566[m bugfix: fix dispatch fp16 type when enable fp8 (#430)
+[33md52f2da[m sampling: support min_p sampling (#422)
+[33m8e482d9[m refactor: Break up `_kernels` into multiple modules (#428)
+[33m898d8ea[m bugfix: Improve numerical stability of sampling kernels (#429)
+[33mddc1f09[m docs: update README (#426)
+[33m04e753c[m bugfix: fix the correctness issue of spec sampling kernels (#425)
+[33m9edbbb9[m bugfix: fix chain speculative sampling implementation (#424)
+[33m6289d67[m refactor: rename swizzling mode name (#423)
+[33m906c2f5[m feat: append attention kernels for fp8 kv-cache (#420)
+[33mb781513[m feat: support fused add rmsnorm (#419)
+[33m1c9ffb3[m ci/cd: add python 3.12 (#418)
+[33m0dd801d[m feat: deterministic sampling (#417)
+[33m146c31e[m bump version: v0.1.3 (#414)
+[33m5e36c52[m misc: enhance allocator error info and add shape check for prefill begin forward functions (#413)
+[33m9907bc1[m bugfix: Fix cudagraph mode of BatchPrefillWithRaggedKVCacheWrapper (#412)
+[33m58d3593[m bugfix: fix cu118 cub usage (#410)
+[33maaa929a[m doc: update documentation for cuda 12.4 and pytorch 2.4 (#408)
+[33m4a7ff88[m ptx: fragment layout swizzling kernels (#407)
+[33md2f6a42[m[33m ([m[1;33mtag: v0.1.2[m[33m)[m chore(main): release 0.1.2 (#394)
+[33m28cffd3[m feat: sliding window attention (#406)
+[33m74ffba1[m feat: non-inplace rope operators (#405)
+[33m2496f5b[m triton: cascade kernels (#396)
+[33m68c3719[m feat: support non-contiguous (packed) input for prefill kernels (#404)
+[33m4c89dec[m feat: add llama 3.1 style rope (#401)
+[33m73a764b[m misc: add vllm to adoption list (#399)
+[33mde16915[m ci: add torch 12.4 to the matrix configuration (#398)
+[33m701c813[m perf: slight optimization on merge states (#313)
+[33m2ab2bca[m refactor: use c++17 style structure bindings (#393)
+[33m5da6577[m ci: setup mypy, pylint and cpplint (#389)
+[33m8e377ba[m misc: clang-format prefill.cuh (#388)
+[33mdc3f184[m hotfix: fix the bug in #386 (#387)
+[33m0cd4994[m bugfix: fix sampling API's behavior on cu118 (#386)
+[33mb64d5c9[m[33m ([m[1;33mtag: v0.1.1[m[33m)[m chore(main): release 0.1.1 (#381)
+[33mcdac577[m bugfix: Fix invalid kernel configuration for sm86 (#385)
+[33m457a0ae[m feat: expose decoupled kv-cache to pytorch api (#383)
+[33mc6f20d1[m perf: use stmatrix in epilogue for sm90+ (#380)
+[33md68a408[m refactor: decouple kv-cache storage (#379)
+[33m9cb28de[m doc: update documentation to v0.1.0 (#378)
+[33m58b68d0[m[33m ([m[1;33mtag: v0.1.0[m[33m)[m chore(main): release 0.1.0 (#373)
+[33m4bba6fa[m feat: expose pytorch api for block sparse attention (#375)
+[33mb2d5994[m doc: fix typo (#376)
+[33m6e028eb[m feat: Fused GPU sampling kernel for joint top-k & top-p sampling (#374)
+[33me14fa81[m feat: Add mask to `merge_state_in_place` (#372)
+[33m17a5f1b[m[33m ([m[1;33mtag: v0.0.9[m[33m)[m chore(main): release 0.0.9 (#359)
+[33m024a79f[m refactor: reduce binary size by making `kv_layout` an argument instead of template parameter (#370)
+[33mc69cfab[m bugfix: fix the decode kernel segfault in cudagraph mode (#368)
+[33m4f0a9f9[m perf: accelerate alibi (#365)
+[33m1116237[m perf: Optimize tensor conversions in C++ code to avoid unnecessary copies (#366)
+[33m264082e[m refactor: slight refactor of prefill kernels (#364)
+[33mac72b1c[m bugfix: fix decode kernels output for empty kv cache (#363)
+[33m1b84fab[m bugfix: check gpu id in PyTorch APIs and use input tensor's gpu default stream (#361)
+[33m3536198[m docs: fix CHANGELOG link (#360)
+[33me56ddad[m perf: accelerate gqa performance (#356)
+[33m2e64a65[m Fix doc typo (#357)
+[33m478447e[m[33m ([m[1;33mtag: v0.0.8[m[33m)[m bump version: v0.0.8 (#355)
+[33m0719296[m ci: update release please github action (#354)
+[33m7adc8cf[m bugfix: fix prefill/append kernel behavior for empty kv-cache. (#353)
+[33md1d443a[m tests: add more unittests for logits cap (#352)
+[33mf5f7a2a[m hotfix: fix the decode kernel with logits cap (#350)
+[33mdc2c76f[m refactor: use sink symbol instead of a placeholder register in row sum mma implementation (#347)
+[33m9918b2f[m docs: update README for ScaleLLM (#346)
+[33mfec77d0[m[33m ([m[1;33mtag: v0.0.7[m[33m)[m ci: remove redundant `NUM_FRAGS_Z` (#345)
+[33m80a376f[m ci: update CHANGELOG (#344)
+[33m0d333ff[m refactor: reduce the binary size of batch decode kernels (#343)
+[33me0a233a[m misc: use https for submodule spdlog (#342)
+[33m457eb78[m linker: use `mcmodel=medium` and `--no-relax` to compilation flags for large wheels (#341)
+[33mdf59f71[m [CMake][Bugfix] Set default value for FLASHINFER_GEN_MASK_MODES (#340)
+[33m95f507f[m chore(main): release 0.0.7 (#327)
+[33ma2498f5[m feat: customize `logits_soft_cap` value (#339)
+[33m3afb6d3[m benchmark: add batch prefill with ragged kv-cache benchmark (#338)
+[33m10e6b17[m bugfix: fix the `forward_return_lse` function in `BatchPrefillWithRaggedKVCache` class (#337)
+[33mbf2a6c7[m perf: more options for kv tile size (#336)
+[33mea89492[m bugfix: fix std::max mismatch in #333 (#334)
+[33m4d08c63[m bugfix: fix the scheduler behavior of large batch size (#333)
+[33m947830b[m doc: bugfix on documentation about mask usage (#331)
+[33mf237f5f[m perf: change minimal `kv_chunk_size` back to 128 (#329)
+[33m1df7b03[m ci: separate `update_whl_index` from github action files (#328)
+[33mc146e06[m[33m ([m[1;33mtag: v0.0.6[m[33m)[m fix: disable other warp layout because of large binary size (#326)
+[33mda83cf5[m Bugfix: bugfix to #322 (#325)
+[33m545b9ca[m chore(main): release 0.0.6 (#324)
+[33m4e89b4d[m perf: use 1x4 warp layout for small query length (#322)
+[33m231b1dc[m ci: use python3 for release wheel workflow (#321)
+[33ma0297e7[m[33m ([m[1;33mtag: v0.0.5[m[33m)[m ci: fix setuptools version (#319)
+[33m5c05676[m chore(main): release 0.0.5 (#232)
+[33m62cd10d[m doc: bump doc version to v0.0.5 (#318)
+[33m3b50dd5[m feat: add `use_tensor_cores` option to decode kernels to accelerate GQA (#317)
+[33m2ef20c1[m bugfix: fix cascade test (#315)
+[33mf0bb0a3[m perf: split kv-cache for prefill/append kernels (#310)
+[33mcf77d96[m refactor: simplify kernel interface (#312)
+[33m3d43dc9[m perf: use packed bit array for attention mask (#308)
+[33m876cc53[m refactor: use combined div/mod for write lse (#307)
+[33m82fd8c7[m refactor: remove `page_size` from template parameters for prefill kernels (#306)
+[33m955dfc5[m ci: faster compile/ci (#305)
+[33mc507156[m test: fix fp8 calibration test (#303)
+[33m51fccf6[m test: fix unittest for group gemm (#302)
+[33mc111ca6[m rafactor: move `gqa_group_size` from template parameter to input arguments (#301)
+[33mbb1783b[m doc: fix logits cap docstring (#300)
+[33mc18745b[m doc: fix the description of logits cap in docstring (#299)
+[33mab1e2ad[m feat: initial support of logits hook (#298)
+[33m5602659[m feat: Separate Q and KV dtypes for decode (#286)
+[33m1250b68[m bugfix: suppress alignment warning of sampling kernels (#297)
+[33maff4cf0[m bugfix: fix wrong `padded_batch_size_` (#296)
+[33m60459e4[m refactor: refactor decode handler (#294)
+[33m4c5e28b[m misc: add some notes in `cmake.config` (#293)
+[33m4198686[m doc: fix the math display of group gemm operator (#292)
+[33me252c94[m bugfix: Fix the behavior of decode cuda graph wrapper (#291)
+[33mf13ec08[m bugfix: fix the synchronization issue in distributed operators (#290)
+[33m03553da[m feat: initial support of distributed operators (#289)
+[33m809abaa[m cmake: fix DECODE_F8_DTYPES and DECODE_FP8_DTYPES discrepancy (#287)
+[33m5a38066[m bugfix: fix the data type of aligned_alloc in handlers (#283)
+[33me08ba42[m feat: add group gemm operators (#282)
+[33m7aadc0d[m Add dtype checks for q-kv tensors (#280)
+[33m1092e7e[m bugfix: fix cudagraph-compatible prefill/decode apis (#281)
+[33m7def34e[m misc: suppress compilation warning of fastdiv (#279)
+[33mad1b202[m perm: add fastdiv for uint32_t (#278)
+[33m24cc583[m feat: support cuda graph for batched multi-query(prefill/append) attention (#277)
+[33m081a4c5[m Revert "feat: support cuda graph for batched multi-query(prefill/append) attention" (#276)
+[33m83ceb67[m feat: support cuda graph for batched multi-query(prefill/append) attention (#275)
+[33m041b63a[m fp8: add calibration scale for decode attention operators (#273)
+[33m64e935a[m hotfix: fix setup.py (#274)
+[33mab92880[m git: ignore generated directory in documentation (#272)
+[33m48941fa[m doc: add some documentation for attention with mask API (#271)
+[33mc6b7c20[m doc: update documentation for mask layout (#270)
+[33mb16bbe4[m 3rdparty: add dependency to cutlass and composable kernels (#269)
+[33m2bdacfe[m 3rdparty: add mscclpp dependency (#268)
+[33m79a2125[m bugfix: avoid potential illegal memory access (#267)
+[33m7304282[m feat: support custom attention mask in prefill/append attention kernels (#266)
+[33m08ab1c1[m bugfix: use `FlagHeads` instead of `SubtractLeft` for cuda 118 (#265)
+[33m316b2e1[m doc: bugfix in kv-layout docs (#264)
+[33m2814233[m doc: update documentation (#263)
+[33mcea2bb9[m sampling: fused speculative sampling kernels (#259)
+[33m7e9cc7f[m perf: initial cuda graph support (#256)
+[33med20304[m bugfix: fix pybind class bindings (#255)
+[33m426266c[m perm: use page-locked host memory for auxiliary data structure on CPU (#253)
+[33m24c861b[m cmake: backward compatibility for TVM_HOME (#252)
+[33mfc2f31c[m cmake: rename TVM_HOME to TVM_SOURCE_DIR (#251)
+[33m3b3ce05[m support versatile gqa size for batch prefill (#223)
+[33m49c4df2[m Move -Wno-switch-bool argument to cxx from nvcc (#244)
+[33mb72e528[m bugfix: Fix dispatcher in src directory (#241)
+[33maf5042a[m bugfix: fix the `generate_dispatch_inc` script (#240)
+[33m84a433a[m compilation: Suppress switch bool warning (#239)
+[33mbadb5b5[m cmake: macro trimming (#235)
+[33m0929023[m sampling: expose sampling APIs in pytorch (#238)
+[33m15db5de[m doc: bump documentation version (#236)
+[33m6538490[m ci: update release wheel yaml (#234)
+[33m62343e6[m[33m ([m[1;33mtag: v0.0.4[m[33m)[m fix: remove 8 from default page size (#233)
+[33m94bcf6f[m fix: fix macro to suppress compilation warning (#231)
+[33m11ca502[m Revert "ci: remove multi-threading in nvcc compile flags (#229)" (#230)
+[33mf1da148[m ci: remove multi-threading in nvcc compile flags (#229)
+[33mbc5c4fa[m bugfix: fix MANIFEST.in (#228)
+[33m8d8aeff[m chore(main): release 0.0.4 (#178)
+[33m22b8f29[m bugfix: fix the potential issue of sampling kernels (#226)
+[33m5073804[m bugfix: Fix the correctness issue of sampling kernel (#225)
+[33md80595c[m Fix implicit cast in sampling (#224)
+[33m23dd247[m bugfix: fix sampler's implementation bug when dtype is not float32 (#221)
+[33m0dbd2a2[m cmake: fix cmake files (#220)
+[33mdd88dea[m [BugFix] Fix build error related to dispatch page size (#217)
+[33m4b27040[m misc: make max_top_p/k_rounds a input argument instead of template parameter (#219)
+[33mf978e02[m ci: add pytorch 2.3 to matrix (#216)
+[33ma02be3e[m [TVMWrapper] Add wrapper functions for sampler (#215)
+[33m4984a27[m misc: parallel sampling from probability (#214)
+[33mb3f1ffb[m sampling: support parallel top-p sampling (#213)
+[33mfb69910[m perm: optimize sampling performance (#212)
+[33mdc72227[m move dispatch for batch prefill (#209)
+[33mf01c768[m sampling: fix alignment issue for vocab_size not divisible by vec_size (#211)
+[33mf42e328[m dependency: update submodules (#210)
+[33m350917e[m bench: add sampling & norm benchmarks (#208)
+[33m3e515a4[m misc: fused kernel for sampling and normalization functions (#207)
+[33m04deac2[m [CMAKE] Make generation option configuration (#205)
+[33ma7f494f[m cmake: Update CMakeLists.txt (#203)
+[33mc247eea[m Fixes a misformated macros (#204)
+[33m9206727[m Enable GQA group size = 6 (#201)
+[33mb217a6f[m feat:support any num_heads for get_alibi_slope (#200)
+[33ma22aeb6[m [CMake] Add positional independent code (PIC) option to kernels (#198)
+[33m3cccaac[m remove duplicates of _get_cache_buf func (#197)
+[33mf9c8218[m [Minor] Fix build when disable bf16 and fp8 (#196)
+[33mb20a460[m [TVMWrapper] Support auxiliary DLTensor with byte offset (#193)
+[33m1df641f[m example: add example of using BatchPrefillWithRaggedKVCacheWrapper c++ api (#190)
+[33m81230cd[m refactor: unify dispatch scheme (#183)
+[33mb3fef8a[m [fix] change build error to runtime error to allow build pass with older architecture. (#184)
+[33m8eed01c[m fix: fix python package dispatch error message (#182)
+[33m5af935c[m feat: mma rowsum for fp8 (#180)
+[33md305798[m feat: add mma instructions for fp8 (#179)
+[33m238563f[m[33m ([m[1;33mtag: v0.0.3[m[33m)[m fix: fatal bugfix in batch decode operator (#177)
+[33m44d3c03[m Update release_wheel.yml (#176)
+[33m68e979a[m doc: bump documentation version (#174)
+[33m58b0c4a[m bugfix: Fix release wheel script and remove uninstantiated branches in dispatch (#173)
+[33mbd5b60a[m ci: reduce binary size (#172)
+[33m2657813[m ci: reduce compile time
+[33mf12e5fb[m bugfix: fix `manifest.in` (#169)
+[33m34c1bc8[m refactor: decouple attention implementation and declaration in different header files (#167)
+[33m0d04571[m chore(main): release 0.0.3 (#120)
+[33md78ce22[m bugfix: fix the behavior of `get_k/v_ptr` for `PageStorage::kPointers` (#165)
+[33mfabfcb5[m [TVMWrapper] Add stream argument in BeginForward (#164)
+[33m23c02ce[m misc: ignore invalid configurations (#162)
+[33m30fa584[m fix: fix FindThrust.cmake (#161)
+[33m66ee066[m feat: pytorch api of fp8 kv-cache (#156)
+[33mde129b9[m doc: fix docstring of `pos_encoding_mode` field (#148)
+[33mbf2117b[m doc: update the docstring related to alibi (#147)
+[33m383518b[m feat: support ALiBi (#146)
+[33m85d4018[m feat: adding `sm_scale` field for all attention APIs (#145)
+[33m660c559[m perf: multiple q by sm_scale in decode kernels (#144)
+[33m5f70697[m refactor: move attention related headers to flashinfer/attention (#143)
+[33mae68085[m refactor: change tvm wrapper symbol names (#141)
+[33m3d55c71[m fix: bugfix to pr 135 (#136)
+[33m9b7b0b9[m fix: fix bugs introduced in #132 (#135)
+[33m0372acc[m feat: enable `head_dim=256` for attention kernels (#132)
+[33ma346b27[m [Minor] Quick fix on python build for path and python3.8 (#133)
+[33m4f65fbc[m support Turing arch (#128)
+[33m615877a[m ci: py38 wheels (#131)
+[33m1399a38[m doc: update 0.0.2 documentation (#127)
+[33mf1f6a0d[m Passing in attn_score_scaling_factor into tvm_wrapper (#126)
+[33m1b75874[m[33m ([m[1;33mtag: v0.0.2[m[33m)[m ci: revert #122 and #123 (#124)
+[33m0182033[m ci: run release if build wheel success or skipped (#123)
+[33m3e19ec3[m ci: add an option of skipping build wheels (#122)
+[33m2b3fcde[m fix: to fix the re used in matching wheel names (#121)
+[33m2e982ea[m fix: fix the re expression in build wheel scripts (#119)
+[33mc68d7ea[m chore(main): release 0.0.2 (#116)
+[33maf6bd10[m fix: version names cannot include multiple `+` (#118)
+[33mc849a90[m fix: version naming issue (#117)
+[33m2d8807d[m fix: add python 3.9 wheels to ci/cd (#114)
+[33md4146fb[m bugfix: fix the compilation issue of pip wheels (#115)
+[33m1306d11[m [CI/CD] Add torch 2.2.0 wheels (#110)
+[33m6c6c44a[m Use Torch's current stream for ops (#111)
+[33m3fc62cb[m [CI/CD] Fix the commit SHA of release-please (#107)
+[33mb30dad3[m [Doc] Improve README and documentation. (#106)
+[33ma389ed4[m Support RoPE position info in batch prefill/decode kernels (#69)
+[33mc55cd60[m[33m ([m[1;33mtag: v0.0.1[m[33m)[m [Bugfix] Python package do not have `__version__` (#104)
+[33m0bedda7[m [Doc] More examples (#103)
+[33m922f0c6[m [Bugfix] Fix the import issue in `page.py` (#102)
+[33m00aa360[m [CI] Fix setup.py (#101)
+[33m0e5482f[m [Doc] Fix typo (#100)
+[33m354ab22[m [Doc] Documentation of Python APIs and tutorials on page layout (#90)
+[33m6f1ff31[m [CI] Providing inputs for `workflow_dispatch` event in release wheel workflow (#99)
+[33mc6b93f9[m [Doc] Update README (#89)
+[33m6031092[m [Refactor] Accelerate PyTorch Extension Compilation (#98)
+[33m633b537[m [CI] Bugfix on artifact path (#97)
+[33maf5536b[m [CI] Remove py3.12 from the matrix (#96)
+[33mf0e8101[m [CI] Boostrapping release please (#95)
+[33mb681222[m [CI] Add release-please-config.json (#94)
+[33m7f89bf3[m [CI] Add scripts to automatically bump version and release wheels & add option to trigger build manually (#93)
+[33m08aee43[m [Feature] Implement pytorch binding for C++ APIs (1/2) (#92)
+[33m064efdd[m [CI] Setup github actions for release wheel (#91)
+[33m51b88d2[m [Performance] Using user-allocated workspace for batch decode/prefill handlers (#88)
+[33m9f49803[m [Refactor] Formalize NHD/HND layout annotation (#85)
+[33md10f082[m [Performance] Accelerate merge function (#87)
+[33m8b23b06[m [Lint] Change the permission of formatter script (#86)
+[33mb498701[m [Performance] Fix the fp8 decode kernel performance degradation issue (#84)
+[33m69e1d03[m [Refactor] Do not print CUDA errors to standard error stream in Release mode (#83)
+[33ma5ceb05[m [Refactor] Use `std::runtime_error` instead of `abort()` (#82)
+[33mc3f093a[m [Doc] Use tlcpack theme (#81)
+[33mfaf00b8[m [Doc] Fix `GITHUB_TOKEN` (#80)
+[33m6743209[m [Doc] Fix documentation build script (#79)
+[33m807d197[m [Doc] Bugfix for `gh_deploy_doc.sh` (#78)
+[33m166f57b[m [Doc] Fix github action workflows. (#77)
+[33m11278f4[m [Doc] Setup documentation (#76)
+[33m9705fb5[m [Bugfix] Fix the bug in `bench_cascade` (#74)
+[33m30055e9[m [Bugfix] Fix the parameter name (#73)
+[33m29733e7[m [Refactor] Use two kernels instead of CUDA cooperative kernel for batch/single decode (#72)
+[33mebd067a[m [Feature] Support variable length merge states (#71)
+[33m88b9496[m [Performance] Another prefill/append parameter tweak (#68)
+[33m8320ebe[m [Performance] Increase `num_frags_z` for GPUs with larger shared memory per SM (#63)
+[33me1eafae[m [Refactor] Update the BeginForward API for batch prefill handler (#61)
+[33m00c94e2[m [Refactor] Remove unnecessary synchronizations (#60)
+[33m5a0f257[m [Benchmark] Benchmarks & Unittests for Two-Level Cascade Inference (#59)
+[33mee3a7e8[m [Bugfix] Fix the lse computation for batch decode kernel (#58)
+[33m00cf5f4[m [Refactor] Change `batch_size` dimension to `seq_len` dimensions (#57)
+[33m416a09b[m [CMake] Suppress TVM binding compilation warning (#56)
+[33mfc167a0[m [Performance] Tweak Prefill Parameters (#55)
+[33m0dc09e3[m [Unittest] Enhance merge state(s) unit tests (#54)
+[33m1fbe6f3[m [Performance] Accelerate merge function when batch size is small (#53)
+[33m0cdd329[m [Bugfix] Store LSE when split_kv is activated (#50)
+[33m473c9ae[m [Hotfix] Fix the bugs in #48 (#49)
+[33mc213c7b[m [Performance] Accelerate append prefill kernel (#48)
+[33m19a2b2e[m Add tests & benchmarks for merge state kernels (#47)
+[33mcdbfa31[m [Hotfix] Fix the behavior of `FLASHINFER_CUDA_ARCHITECTURES` flag in cmake (#46)
+[33ma503bf9[m [Test] Add unittests for `group_size=4` (#45)
+[33m9c2d843[m Add find_packages in setup.py (#44)
+[33m7d3a473[m Use external provided scratchpad (#43)
+[33m8694d61[m Ignore FLASHINFER_CMAKE_CUDA_ARCHITECTURES when externally defined (#42)
+[33mde3a5e5[m [Performance] Cooperative prefill parameter tweak (#41)
+[33mc8eaa8a[m [Refactor] Rename cell to b128 (#40)
+[33mf2192c2[m Revert "[Refactor] Rename cell to b128" (#39)
+[33m46ce720[m [Refactor] Rename cell to b128 (#38)
+[33m8fa4035[m [Refactor] Rename some confusing variable/template parameter names (#37)
+[33mfb0f882[m Tweak cooperative prefill parameters, and increase maximum context length in benchmark to 65536 (#36)
+[33mc052180[m Compile more GQA group sizes (#35)
+[33m0c14790[m [Bugfix] Fix the frag_b constant for mma rowsum of b16 input data type (#34)
+[33mae1a650[m reduce the number of registers
+[33me0ffc4b[m [Refactor] Change cross-wise shared memory layout of prefill kernels
+[33ma41e329[m make head_dim template parameter in tensor_info_t
+[33mb064ad2[m Follow-up split-kv batch decode fix (#33)
+[33m0dd2334[m bugfix on split-kv batch decode function to handle the corner case
+[33m7f01083[m move unused placeholder register to ptx instead of expose it in CUDA
+[33mde20160[m Fix typos (#32)
+[33m8d987b9[m add volatile qualifier to suppress 550-D warnings
+[33m9eab876[m add mma instructions for row sum
+[33m15e4160[m update formatter
+[33mc3dafa4[m add formatter script
+[33m22c708f[m tweak batch prefill api parameter order
+[33mffde059[m expose BatchPrefill wrapper in PyTorch APIs
+[33m8121087[m bugfix on ce8fe1868f7669e029bfa0f13ae90a2639e951d5 which didn't return cudaSuccess in the end
+[33mbcc48ba[m change the argument order
+[33mc296265[m notes on template parameters
+[33mce8fe18[m return cudaError_t for begin/end forward functions
+[33mfd20ea5[m expose batch decode pytorch api
+[33m72d2611[m remove return_lse compilation flag
+[33md2fbfd1[m refactor handler interface & bugfix in tvm wrapper
+[33m65db90e[m [hotfix] Fix tvm wrapper for single prefill
+[33mcfd24d6[m Add TVM global functions (#31)
+[33m4d77637[m batch_prefill python api (#30)
+[33mf77482a[m function renmaing to avoid confusion
+[33m2192493[m use ceil_div
+[33m619024c[m naming consistency
+[33m033d273[m Update handler to use cudaMalloc to avoid async malloc delay (#29)
+[33madcf1d0[m refactor to support begin/end forward for batch prefill functions
+[33m6c10476[m Enable NVBench/GoogleTest only when tests are enabled (#28)
+[33m80ca2f2[m remove QKVApplyRotary to QKApplyRotary
+[33mc6fdbd6[m fix the online-softmax normalizer initialization for prefill & multiple merge
+[33m47fda1b[m Fix online-softmax normalizer (#27)
+[33m5dadb24[m fix the behavior of merge states
+[33m04d1bd2[m Fix Rotary Embedding kernel (#26)
+[33m5bcba49[m batch qkv apply rotary in place
+[33m70df0e3[m remove unnecessary template parameter
+[33m352b83c[m accelerate single_prefill tvm binding compiliation time
+[33m475dfca[m further reduce compilation time
+[33mdaa37b2[m bugfix
+[33mf8c5bc6[m accelerate compilation of tvm binding
+[33m3ad9352[m TVM wrapper fix (#25)
+[33mcdc13c1[m rename buffer manager to handler, allow multiple handlers
+[33mea17a73[m replace some confusing comments
+[33m2b36f65[m accelerate batch decode
+[33m3756ebe[m Merge branch 'main' of git-zihao:yzh119/flashinfer
+[33m481c1d2[m fix fatal bug in wrapper.cuh
+[33m09e6b72[m update tvm binding apis
+[33m218425d[m add merge state in-place
+[33m8097653[m remove redundant code
+[33mf062aee[m expose causal and lse in tvm bindings
+[33m70d7555[m tvm wrapper for BatchPrefillWithRaggedKVCache
+[33m5cbe55a[m bugfix on BatchPrefillWithRaggedKVCache
+[33m36dde4c[m add BatchPrefillWithRaggedKVCache
+[33mbd7fa0c[m Merge branch 'main' of git-zihao:yzh119/flashinfer
+[33m2a3d6d0[m accelerate single decode
+[33mdb4b0db[m Properly Handle Per-GPU Scratchpad in Multi-GPU Setting (#24)
+[33m2e4c16d[m Properly Handle Per-GPU Scratchpad in Multi-GPU Setting
+[33me668648[m Loose Rank Requirement in TVM Binding (#23)
+[33m5c7696b[m Loose Rank Requirement in TVM Binding
+[33mf87b35f[m only create request_indices and tile_indices when necessary
+[33m91fb106[m add tvm wrapper for merge state
+[33m1f57b6c[m Merge branch 'main' of git-zihao:yzh119/flashinfer
+[33m224aedb[m rename mask_x to mask_s
+[33m6fcadac[m Tweak `FLASHINFER_INLINE` into a device-only specifier (#22)
+[33m4e87b6f[m Tweak `FLASHINFER_INLINE` into a device-only specifier
+[33mfc0726c[m remove layer information in page tables
+[33madef99e[m add return_lse for batch decode
+[33m165c157[m refactor for name consistency
+[33m4d5b204[m Merge pull request #21 from KnowingNothing/fix_stmatrix_asm
+[33ma8ab535[m [FIX] stmatrix asm output operand
+[33mdd4f0a9[m some more docs
+[33m3159031[m allow return lse in batch prefill operator
+[33m440150d[m fix illegal mem access issue in single bench prefill
+[33me63d3e6[m parameter tweak
+[33mb83b408[m cache page pointers
+[33m11364ca[m TVM Wrapper for single prefill
+[33mc05be79[m add tvm wrapper for prefill
+[33m973594d[m bugfix on other causal prefill functions
+[33m8c8afab[m bugfix on causal prefill
+[33m80cbc75[m restructure loop of batch decode with paged kv-cache
+[33m8476484[m fix the work estimation function of single decode
+[33m5ae468a[m unlock page_size=1
+[33m9603fba[m fix kernel config for some operators
+[33mffe1171[m remove unnecessary comments
+[33m6cbaf6e[m bugfix in merge_states
+[33mb460406[m aexpose more functions
+[33m2e9243e[m common prefix python api
+[33m8f95ea8[m rename last_page_offset to last_page_len
+[33m89a761f[m Merge branch 'main' of github.com:flashinfer-ai/flashinfer
+[33m076dec6[m [Bugfix] Potential illegal memory access in batch decode
+[33m8159aec[m Merge branch 'main' of github.com:flashinfer-ai/flashinfer into decode-acceleration
+[33m6d88efc[m wip
+[33mf4f76b7[m Merge pull request #18 from abcdabcd987/template-dispatch
+[33mafccca0[m allow compiling batch_prefill and batch_decode in separate files
+[33m50a2115[m decouple state update
+[33ma44bcfa[m python format
+[33m7cae480[m Merge pull request #17 from Dune-Z/main
+[33meffb698[m prefill python api
+[33me77c7e7[m Merge branch 'main' of github.com:flashinfer-ai/flashinfer into python
+[33mdde5e88[m PyTorch API for single prefill/decode
+[33mf9e3ce6[m Merge pull request #16 from flashinfer-ai/gqa_init_kv_append_kv
+[33m288e143[m Bugfix: init_kv and append_kv out of bound when using GQA
+[33m25f7c03[m do not use assert
+[33mf77b2ea[m remove norm_on_the_fly flag for decode
+[33m6d04d5f[m Merge branch 'main' of github.com:flashinfer-ai/flashinfer
+[33mc626beb[m bugfix on testt page
+[33m4aa8130[m [CMake] Reading TVM_HOME from build args or environment (#15)
+[33m333f7e5[m add benchmark for using prefill for batch decode
+[33m8fc7011[m add benchmark for using prefill for decode
+[33m5d13209[m remove unnecessary code
+[33m544f9a9[m remove tvm submodule
+[33m4f6e42a[m remove tvm byoc example
+[33m52933be[m fix tvm wrapper
+[33me88a689[m refactor & customize page_storage
+[33mc3a6de4[m refactor multi-query prefill kernel (kv h head major)
+[33mc8fa642[m update layout
+[33mac09dec[m accelerate f16 qk accum
+[33mb38a590[m update batch prefill & work estimation
+[33m3476c64[m add allow_fp16_qk_reduction flag
+[33mee6abb4[m more ptx for f16
+[33m179dabb[m remove unused functions
+[33mb78ea38[m improve decode heuristic chunk size
+[33me81598b[m use rcp instead of fdividef
+[33m61ace77[m using get_k_ptr instead of get_k_elem_offset
+[33m4a8d3f3[m refactor
+[33mbeb51bc[m Merge branch 'main' of github.com:flashinfer-ai/flashinfer
+[33m3a962e7[m accelerate batch prefill
+[33mbb2e00a[m Merge pull request #14 from cyx-6/fix-doc
+[33m18c6aaf[m fix doc layout typo
+[33m31c10a5[m Merge pull request #13 from MasterJH5574/split-kv
+[33m65a0fa0[m [Decode] KV cache split pre-process update
+[33m190408a[m remove redundant files
+[33m88346f4[m update tvm wrapper
+[33m492baad[m Merge branch 'main' of github.com:flashinfer-ai/flashinfer
+[33maec0836[m add buffer manager
+[33m4a80ba1[m rm dmlc-core dependency
+[33m4430b04[m Merge pull request #12 from flashinfer-ai/split-wrapper
+[33m6abda11[m [Wrapper] Split prefill/decode wrapper
+[33m20d204d[m add l2 prefetch back
+[33mb762708[m remove print info for test single prefill
+[33m301dbd9[m accelerate fused rotary prefill
+[33md92ec5c[m reduce the number of computing permuted smem offset
+[33me61e84f[m do not prefetch l2
+[33mfeb5aa5[m optimize order
+[33m8d33be9[m Revert "remove unnecessary block sync"
+[33me37db31[m remove unnecessary output
+[33m8bb9658[m fix batch prefill test
+[33m7d374c3[m remove unnecessary block sync
+[33mf56724c[m add back tests that are commented out
+[33m6e47938[m specialize page_size
+[33m5a110bc[m more docstring
+[33ma380ce6[m update docstring for decode & new lines at EOF
+[33m6f7cb8e[m insert newline at eof >> .clang-format
+[33m16a6ef2[m add docstring for prefill kernels
+[33meab0006[m column limit 80 -> 100
+[33ma3fd01c[m update prefill work estimation
+[33mc0e405f[m bugfix
+[33m133fc95[m cleanup
+[33ma3106eb[m set max dynamic smem before estimate num blocks
+[33m856ef0f[m insert threadfence_block
+[33m2e20279[m revert 9ad17b634ccf633e1222402c1408435f7a8a8bd9 and determine num_frags_z via device properties
+[33m0fa3630[m update pred_load api
+[33m99236f7[m only fill zero for v
+[33m541d25b[m zero fill for cp.async
+[33m646f3d0[m cherry-pick e2e-stable
+[33m13883f3[m update CMakeLists.txt accordingly
+[33mba37c02[m Merge pull request #10 from yzh119/skip-prefill
+[33maf3d103[m add batch prefill test
+[33m913d0cf[m Skipping prefill for empty sequence
+[33ma2a7176[m simplify x_frag init
+[33mbb5d9cc[m bugfix
+[33mef2cb49[m Merge branch 'main' of github.com:yzh119/flashinfer
+[33m9ad17b6[m smem <= 49152 to increase occupancy
+[33m588d4a8[m Update wrapper to remove device arg (#9)
+[33m9cd3a1b[m simplify (remove pin_q_in_reg
+[33m42e59f1[m update produce_kv
+[33m11a97a5[m Revert "use serpentine order for non-fused case"
+[33m6764e5f[m use serpentine order for non-fused case
+[33m79abc75[m remove device_id
+[33mac934a7[m bugfix from punica
+[33m6b515ae[m bugfix for fuse rotary prefill
+[33m79bd6fc[m less register spill
+[33m89bf456[m improve write o
+[33mb394db2[m simplify
+[33m6874a0d[m Revert "use vec dtypes for prefill"
+[33mf2d4587[m Revert "further reduce number of registers"
+[33m5834b34[m further reduce number of registers
+[33m8ae6967[m use vec dtypes for prefill
+[33m02d873b[m refactor
+[33meec6464[m Revert "zigzag traverse"
+[33m1300d87[m zigzag traverse
+[33m733066e[m Merge branch 'main' of github.com:yzh119/flashinfer
+[33m35c78f1[m change default parameter
+[33m2711216[m Merge pull request #8 from yzh119/junrushao-patch-1
+[33m3f7c2f6[m update config.cmake
+[33m41f4330[m Rename target `tvm_binding` to `flashinfer_tvm`
+[33m0199424[m change some parameters
+[33mf030c28[m pin q
+[33m4d02476[m fix bench single prefill
+[33m30b9308[m fix warnings
+[33m5b8a138[m clang-format
+[33m5f90286[m add copyright headers
+[33mb1628f0[m fix cmake
+[33m35f1168[m typo
+[33m9017e4f[m bugfix
+[33m6ca20d1[m improve cmake
+[33m66b5198[m make benchmarks more flexible
+[33m59007dd[m add cudaError_t check for unittests
+[33ma5b2948[m add back some missing tests
+[33mb66f990[m refactor
+[33m1db9883[m grouped query attention use too much registers for fp8
+[33m4e1ff22[m complete cooperative operators
+[33m0025c3c[m update causal flops
+[33mcc5a1d4[m fix typo
+[33m5ef2a82[m add tflops column
+[33me331beb[m fix default config
+[33m38fbd82[m fix bench singple prefill
+[33m962b6e8[m further reduce number of shfls
+[33m3a46dca[m group query attention
+[33m2c613a2[m reduce sincos by half
+[33me334337[m add prefill + fuse rotary to benchmark
+[33m4af30c2[m Revert "iterative-sincos"
+[33ma767f58[m Merge branch 'match-a100'
+[33m2a9d035[m Merge branch 'main' of github.com:yzh119/flashinfer
+[33m149a6ec[m [prefill] add fuse rotary back
+[33m7e87e7e[m slight improvement
+[33ma339872[m slight improvement
+[33m50f3c2c[m revert reverse-iter
+[33mb98563c[m iterative-sincos
+[33m01259d3[m format
+[33m6455d93[m suppress sign warning
+[33mb9ca761[m more tests
+[33m46f18e5[m simplify
+[33m2b4316e[m add mask iter
+[33m1dfac85[m Merge pull request #7 from yzh119/cudafree
+[33m1bd9fd9[m [Fix] Free allocated CUDA memory in prefill
+[33m2bdf8b2[m typo
+[33m707f2fa[m fuse sm_scale & q again
+[33mca2aba5[m all pred load
+[33me88fb4b[m reverse iterator
+[33m1e9ab5e[m reduce the number of shfls
+[33mcf9078f[m trivial updates
+[33mec87be0[m using relative delta
+[33m4bea9d2[m smem->frag double buffer, next step is using delta for computing smem indices
+[33m49eba01[m rename bank to cell to avoid confusion
+[33mc5d5bb8[m refactor vec dtypes api
+[33m5534dc0[m use uint32_t instead of uint64_t & add pragma unroll back
+[33m91a64ed[m bugfix for nan issue
+[33m7c00474[m Update wrapper, decrease pages ndim by 1 (#6)
+[33m1436e79[m fix wrong init
+[33me905626[m bugfix
+[33m68b50b0[m Merge pull request #5 from yzh119/prefill-wrapper
+[33m13aa9fb[m Wrapper support for prefill with KV cache
+[33ma90a70c[m add device_id
+[33m6847261[m bugfix
+[33m880661a[m wip
+[33ma0f03eb[m Merge pull request #4 from yzh119/decode-wrapper-csr
+[33m3cb0f75[m [Wrapper] Add the CSR indptr of append lengths to interface
+[33md5bf2c4[m faster math
+[33m01dc8ab[m parameter tuning
+[33m997e5e0[m remove redundant variables
+[33m97ba16d[m decode: norm on the fly -> norm in the end
+[33m0728ada[m restructure batch decode pipeline
+[33m996a2ed[m restructure single decode pipeline
+[33me2f1ee4[m init attempt in restructuring decode pipeline
+[33m2beebb5[m bugfix
+[33m2113558[m restructure-pipeline
+[33m85e4d6f[m remove unnecessary sync
+[33m60144a5[m slight optimization
+[33m25d3da0[m fix format
+[33m6c5603c[m accelerate online softmax states
+[33m668fc1e[m add causal flag
+[33m9e3d33d[m accelerate scale and mask
+[33m1080367[m load_bank_async no pred
+[33m7cfdf76[m skip upper triangle
+[33mf6d09ed[m unroll 8
+[33m2887a41[m move divide-d out of reduction loop
+[33me763427[m remove num_frags_x
+[33m8180814[m rename q_len to qo_len
+[33mc01a72c[m update prefill
+[33m100ccc6[m Merge branch 'main' of github.com:yzh119/FlashInfer
+[33mdfb786c[m replace cuda::memcpy_async with ptx cp.async
+[33mc8fcb4d[m fix findthrust regex issues from https://github.com/projectchrono/chrono/commit/cb7426d89982c78248ad34bf46adefb8e9373adf
+[33m81291dd[m bugfix
+[33m758ccc8[m use ptx instead of cuda's cp async
+[33m18143b1[m rename kApplyRotary to kLlama
+[33mee7c274[m bugfix
+[33ma48b5dd[m add prefill v1
+[33mc8b2468[m Merge branch 'main' of github.com:yzh119/FlashInfer
+[33m9c7dfc5[m append page
+[33m212e056[m Benchmark batch decode operator
+[33mff94266[m bench batch decode
+[33m93cca61[m unify HND and NHD scheduling
+[33m02b5419[m add non-cooperative kernel for HND
+[33m86f3f47[m Merge branch 'main' of github.com:yzh119/FlashInfer
+[33mf08f26e[m customized index dtype
+[33m3d1f5b3[m Add tmp buffer and rotary mode to BatchDecode wrapper
+[33m4558be7[m Add tmp buffer and rotary mode to BatchDecode wrapper
+[33m0dc9f10[m fix tvm_wrapper
+[33m6c8bac1[m bugfix for page_size <= bdy
+[33m4f0c9b8[m refactor consumer/prodcuer
+[33m06c8e79[m add batching decode test and fix bugs
+[33m77242ef[m Merge pull request #1 from yzh119/batch-decode-wrapper
+[33m450d95a[m [Wrapper] TVM wrapper for batch-decode kernel without RoPE
+[33m18af054[m disable cooperative kernel for short sequence
+[33m9ac23f6[m upd
+[33m0ec86ac[m update include
+[33m97c0e1c[m fix docstring
+[33m6c25f39[m update CMakeLists.txt
+[33m5077cdd[m init support of batching
+[33m359ff9e[m parameter tweak
+[33m270c1c0[m update tvm interface
+[33m5516c19[m add HND decoding
+[33md51d736[m rename to pred guard
+[33m3b10a73[m bugfix
+[33mdf43969[m remove redundant functions
+[33m84fb1d7[m bugfix
+[33m2977506[m fix sm80 performance issue
+[33m694304d[m refactor
+[33m361389f[m refactor & prepare for prefilling kernels
+[33m3ef9ff5[m bugfix and accelerate
+[33m00f95f9[m refactor
+[33m048601d[m use bdx,bdy,bdz
+[33m5aaa8f4[m bugfix
+[33m4f5db4d[m another schedule
+[33mcb2510d[m fix typo
+[33m62d5de8[m update tests
+[33m6c64179[m fix fp8 numerical errors
+[33m3eb8c7f[m upd vec_dtypes
+[33m88a80f9[m Merge branch 'main' of github.com:yzh119/flashinfer
+[33m0df7faf[m upd
+[33mce42fc8[m add fp8 for tvm wrapper
+[33m6ab4380[m fastmath
+[33m848d04b[m accelerate rotary
+[33mc54a566[m more vector conversion
+[33mf741099[m tweak chunk size
+[33m99ad0bf[m add heuristic function
+[33m81c3a6d[m more comments
+[33m8447be9[m customize rope_theta
+[33ma422d78[m replace random generator
+[33mbb422fe[m performance improvement
+[33mf8b3fd4[m bugfix
+[33m8e1f5e0[m upd
+[33ma1f7844[m refactor
+[33mbdd11e8[m rename rope_inv_scale
+[33mad63678[m check cudaError_t for benchmark
+[33m656b1a4[m upd
+[33mb0fdc01[m upd
+[33mf56936e[m Merge remote-tracking branch 'origin/main' into 4-stage
+[33ma83c5c0[m disable batch gpu
+[33m8576246[m add cmake flags
+[33ma3bdd99[m fix docstring
+[33m9dd2419[m add e5m2
+[33m3474723[m initial support of e4m3
+[33mcfeb11c[m add bfloat16
+[33mb2f67ee[m fix accuracy
+[33md73d7a4[m debug
+[33m122bfd7[m tvm binding
+[33m8df7911[m bugfix
+[33m14b40c7[m use vec dtypes
+[33mcb9c7b7[m use size_t for all
+[33m7347841[m upd
+[33m96d4188[m upd
+[33m5e5ecfe[m upd
+[33m40ebfe8[m upd
+[33m2227864[m upd
+[33mb626e01[m upd
+[33m58279ac[m import tvm
+[33m2fbb11e[m explore peak performance
+[33m13686ab[m 4-stage
+[33m5b810a3[m change heuristic rule
+[33m7f5d68d[m format
+[33m92035e9[m update schedule, performance not idea yet
+[33m4ce3673[m fixed all numerical issues, and address the performance degration for long sequences, I'll fix the performance for short sequence tmr
+[33md4096e0[m fixed bug and passed all tests, performance degration because of non-consecutive read, will fix it in the next PR
+[33m79288d0[m fuse rotary
+[33m24d92d4[m rename
+[33mf8aa721[m add sm_scale
+[33m39ace00[m generalize
+[33m65b4f70[m speed up
+[33m015b197[m fix bug in evaluation
+[33m1d2cea0[m use async
+[33m9335bcb[m fix errors
+[33m345422f[m init version
+[33m1453a5a[m Initial commit
