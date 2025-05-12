@@ -8,7 +8,6 @@
 #define FLASHINFER_CASCADE_CUH_
 
 #include "../cp_async.hip.h"
-#include "../math.hip.h"
 #include "../utils.hip.h"
 #include "state.hip.h"
 
@@ -228,7 +227,14 @@ __global__ void MergeStatesKernel(DTypeIn *__restrict__ V,
 
     if (num_index_sets == 0) {
         vec_t<DTypeO, vec_size> v;
-        v.fill(DTypeO(0.f));
+        const float zeroF = 0.f;
+        // Use type-specific conversion based on what DTypeO is
+        if constexpr (std::is_same_v<DTypeO, __hip_bfloat16>) {
+            v.fill(__float2bfloat16(zeroF));
+        }
+        else {
+            v.fill(DTypeO(zeroF));
+        }
         v.store(v_merged + (pos * num_heads + head_idx) * head_dim +
                 tx * vec_size);
         if (s_merged != nullptr) {
@@ -439,7 +445,14 @@ PersistentVariableLengthMergeStatesKernel(DTypeIn *__restrict__ V,
 
         if (num_index_sets == 0) {
             vec_t<DTypeO, vec_size> v;
-            v.fill(DTypeO(0.f));
+            const float zeroF = 0.f;
+            // Use type-specific conversion based on what DTypeO is
+            if constexpr (std::is_same_v<DTypeO, __hip_bfloat16>) {
+                v.fill(__float2bfloat16(zeroF));
+            }
+            else {
+                v.fill(DTypeO(zeroF));
+            }
             v.store(v_merged + (pos * num_heads + head_idx) * head_dim +
                     tx * vec_size);
             if (s_merged != nullptr) {

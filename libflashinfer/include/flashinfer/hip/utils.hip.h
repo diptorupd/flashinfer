@@ -9,11 +9,7 @@
 
 #include "../exception.h"
 
-#include <hip/hip_bf16.h>
-#include <hip/hip_fp16.h>
-#include <hip/hip_fp8.h>
-#include <hip/hip_runtime.h>
-#include <hip/hip_runtime_api.h>
+#include "hip_platform.h"
 
 #include <cstdint>
 #include <iostream>
@@ -318,12 +314,12 @@ __forceinline__ __device__ __host__ T1 ceil_div(const T1 x, const T2 y)
 inline std::pair<int, int> GetCudaComputeCapability()
 {
     int device_id = 0;
-    hipGetDevice(&device_id);
+    FI_GPU_CALL(hipGetDevice(&device_id));
     int major = 0, minor = 0;
-    hipDeviceGetAttribute(&major, hipDeviceAttributeComputeCapabilityMajor,
-                          device_id);
-    hipDeviceGetAttribute(&minor, hipDeviceAttributeComputeCapabilityMinor,
-                          device_id);
+    FI_GPU_CALL(hipDeviceGetAttribute(
+        &major, hipDeviceAttributeComputeCapabilityMajor, device_id));
+    FI_GPU_CALL(hipDeviceGetAttribute(
+        &minor, hipDeviceAttributeComputeCapabilityMinor, device_id));
     return std::make_pair(major, minor);
 }
 

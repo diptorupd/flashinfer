@@ -3,6 +3,7 @@
 //
 // SPDX - License - Identifier : Apache 2.0
 
+#pragma once
 #ifndef FLASHINFER_ATTENTION_SCHEDULER_CUH_
 #define FLASHINFER_ATTENTION_SCHEDULER_CUH_
 
@@ -596,7 +597,7 @@ inline hipError_t DecodePlan(void *float_buffer,
 
     FLASHINFER_CUDA_CALL(hipMemcpyAsync(int_buffer, page_locked_int_buffer,
                                         num_bytes_to_copy,
-                                        cudaMemcpyHostToDevice, stream));
+                                        hipMemcpyHostToDevice, stream));
     return hipSuccess;
 }
 
@@ -921,7 +922,7 @@ inline hipError_t PrefillPlan(void *float_buffer,
     size_t num_bytes_to_copy = int_allocator.num_allocated_bytes();
     FLASHINFER_CUDA_CALL(hipMemcpyAsync(int_buffer, page_locked_int_buffer,
                                         num_bytes_to_copy,
-                                        cudaMemcpyHostToDevice, stream));
+                                        hipMemcpyHostToDevice, stream));
 
     return hipSuccess;
 }
@@ -1172,7 +1173,7 @@ inline hipError_t PrefillSM90Plan(void *float_buffer,
     size_t num_bytes_to_copy = int_allocator.num_allocated_bytes();
     FLASHINFER_CUDA_CALL(hipMemcpyAsync(int_buffer, page_locked_int_buffer,
                                         num_bytes_to_copy,
-                                        cudaMemcpyHostToDevice, stream));
+                                        hipMemcpyHostToDevice, stream));
     return hipSuccess;
 }
 
@@ -1583,7 +1584,7 @@ inline hipError_t MLAPlan(void *float_buffer,
     size_t num_bytes_to_copy = int_allocator.num_allocated_bytes();
     FLASHINFER_CUDA_CALL(hipMemcpyAsync(int_buffer, page_locked_int_buffer,
                                         num_bytes_to_copy,
-                                        cudaMemcpyHostToDevice, stream));
+                                        hipMemcpyHostToDevice, stream));
 
     constexpr size_t sizeof_dtype_o = 2;
     AlignedAllocator float_allocator(float_buffer,

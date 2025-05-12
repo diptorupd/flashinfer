@@ -2,7 +2,7 @@
 // SPDX - FileCopyrightText : 2025 Advanced Micro Devices, Inc.
 //
 // SPDX - License - Identifier : Apache 2.0
-
+#pragma once
 #ifndef FLASHINFER_NORM_CUH_
 #define FLASHINFER_NORM_CUH_
 
@@ -343,9 +343,6 @@ hipError_t GemmaFusedAddRMSNorm(T *input,
         FusedAddRMSNormKernel<VEC_SIZE, T><<<nblks, nthrs, smem_size, stream>>>(
             input, residual, weight, d, stride_input, stride_residual,
             weight_bias, eps);
-        FLASHINFER_CUDA_CALL(cudaLaunchKernelEx(
-            &config, kernel, input, residual, weight, d, stride_input,
-            stride_residual, weight_bias, eps));
     });
 
     return hipSuccess;

@@ -4,7 +4,6 @@
 // SPDX - License - Identifier : Apache 2.0
 
 #pragma once
-
 #ifndef FLASHINFER_POS_ENC_CUH_
 #define FLASHINFER_POS_ENC_CUH_
 

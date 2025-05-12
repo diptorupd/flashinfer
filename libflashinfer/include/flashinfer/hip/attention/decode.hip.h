@@ -4,25 +4,17 @@
 // SPDX - License - Identifier : Apache 2.0
 
 #pragma once
-
 #ifndef FLASHINFER_DECODE_CUH_
 #define FLASHINFER_DECODE_CUH_
 
-#include "../cp_async.hip.h"
+#include "../hip_platform.h"
+#include <hip/hip_cooperative_groups.h>
+
 #include "../pos_enc.hip.h"
-#include "../utils.hip.h"
-#include "../vec_dtypes.hip.h"
 
 #include "cascade.hip.h"
 #include "default_decode_params.hip.h"
-#include "state.hip.h"
 #include "variants.hip.h"
-
-#include <hip/hip_bf16.h>
-#include <hip/hip_cooperative_groups.h>
-#include <hip/hip_fp16.h>
-#include <hip/hip_fp8.h>
-#include <hip/hip_runtime.h>
 
 #include <iostream>
 
@@ -839,11 +831,12 @@ hipError_t SingleDecodeWithKVCacheDispatched(Params params,
                     int num_blocks_per_sm = 0;
                     int num_sm = 0;
                     int dev_id = 0;
-                    hipGetDevice(&dev_id);
-                    hipDeviceGetAttribute(
-                        &num_sm, hipDeviceAttributeMultiprocessorCount, dev_id);
-                    hipOccupancyMaxActiveBlocksPerMultiprocessor(
-                        &num_blocks_per_sm, kernel, num_threads, smem_size);
+                    FI_GPU_CALL(hipGetDevice(&dev_id));
+                    FI_GPU_CALL(hipDeviceGetAttribute(
+                        &num_sm, hipDeviceAttributeMultiprocessorCount,
+                        dev_id));
+                    FI_GPU_CALL(hipOccupancyMaxActiveBlocksPerMultiprocessor(
+                        &num_blocks_per_sm, kernel, num_threads, smem_size));
                     uint32_t max_grid_size =
                         uint32_t(num_blocks_per_sm) * uint32_t(num_sm);
                     uint32_t max_num_kv_chunks = max_grid_size / num_kv_heads;
@@ -871,12 +864,14 @@ hipError_t SingleDecodeWithKVCacheDispatched(Params params,
                         <<<nblks, nthrs, smem_size, stream>>>(params);
 
                     if constexpr (AttentionVariant::use_softmax) {
-                        MergeStates(tmp, tmp_lse, o, nullptr, num_chunks, 1,
-                                    num_qo_heads, HEAD_DIM, stream);
+                        FI_GPU_CALL(MergeStates(tmp, tmp_lse, o, nullptr,
+                                                num_chunks, 1, num_qo_heads,
+                                                HEAD_DIM, stream));
                     }
                     else {
-                        AttentionSum(tmp, o, num_chunks, 1, num_qo_heads,
-                                     HEAD_DIM, stream);
+                        FI_GPU_CALL(AttentionSum(tmp, o, num_chunks, 1,
+                                                 num_qo_heads, HEAD_DIM,
+                                                 stream));
                     }
                 }
             });
@@ -924,7 +919,7 @@ hipError_t BatchDecodeWithPagedKVCacheDispatched(Params params,
                     POS_ENCODING_MODE, NUM_STAGES_SMEM, tile_size_per_bdx,
                     vec_size, bdx, bdy, bdz, AttentionVariant, Params>;
                 FLASHINFER_CUDA_CALL(hipFuncSetAttribute(
-                    kernel, hipFuncAttributeMaxDynamicSharedMemorySize,
+                    (void *)kernel, hipFuncAttributeMaxDynamicSharedMemorySize,
                     smem_size));
 
                 if (tmp_v == nullptr) {
@@ -1339,7 +1334,8 @@ BatchDecodeWithPagedKVCacheDispatchedMLA(Params params,
                 NUM_STAGES_SMEM, vec_size_ckv, vec_size_kpe, bdx, bdy, bdz,
                 tile_size_qo_heads, AttentionVariant, Params>;
             FLASHINFER_CUDA_CALL(hipFuncSetAttribute(
-                kernel, hipFuncAttributeMaxDynamicSharedMemorySize, smem_size));
+                (void *)kernel, hipFuncAttributeMaxDynamicSharedMemorySize,
+                smem_size));
 
             if (tmp_v == nullptr) {
                 // do not use partition-kv kernel
@@ -1365,10 +1361,10 @@ BatchDecodeWithPagedKVCacheDispatchedMLA(Params params,
                     NUM_STAGES_SMEM, vec_size_ckv, vec_size_kpe, bdx, bdy, bdz,
                     tile_size_qo_heads, AttentionVariant, Params>
                     <<<nblks, nthrs, smem_size, stream>>>(params);
-
-                VariableLengthMergeStates(tmp_v, tmp_s, params.o_indptr, o, lse,
-                                          params.paged_kv.batch_size, nullptr,
-                                          num_qo_heads, HEAD_DIM_CKV, stream);
+                FI_GPU_CALL(VariableLengthMergeStates(
+                    tmp_v, tmp_s, params.o_indptr, o, lse,
+                    params.paged_kv.batch_size, nullptr, num_qo_heads,
+                    HEAD_DIM_CKV, stream));
             }
         });
     return hipSuccess;
