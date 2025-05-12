@@ -15,8 +15,11 @@
 
 # === BUILD COMPONENT OPTIONS ===
 # Core FlashInfer kernel libraries (C++ libraries used by all components)
+# flashinfer_option(FLASHINFER_BUILD_KERNELS
+#   "Build and install kernel libraries (required for AOT PyTorch extensions)" OFF)
+
 flashinfer_option(FLASHINFER_BUILD_KERNELS
-  "Build and install kernel libraries (required for AOT PyTorch extensions)" OFF)
+  "Build and install kernel libraries (required for AOT PyTorch extensions)" ON)
 
 flashinfer_option(FLASHINFER_TVM_BINDING "Build TVM binding support" OFF)
 flashinfer_option(FLASHINFER_DISTRIBUTED "Build distributed support" OFF)
@@ -76,7 +79,7 @@ flashinfer_option(FLASHINFER_ENABLE_CUDA "Enable NVIDIA CUDA backend" ON)
 
 # === HIP/ROCm OPTIONS ===
 flashinfer_option(FLASHINFER_ENABLE_HIP "Enable AMD HIP/ROCm backend" OFF)
-flashinfer_option(FLASHINFER_HIP_ARCHITECTURES "HIP architectures to compile for (gfx908, gfx90a, gfx942, etc)" "")
+flashinfer_option(FLASHINFER_HIP_ARCHITECTURES "AMD GPU architectures to target" "")
 
 # === AUTO-DERIVED OPTIONS ===
 
@@ -131,30 +134,6 @@ if(FLASHINFER_ENABLE_CUDA)
   endif()
 endif()
 
-if(FLASHINFER_ENABLE_HIP)
-  # Set the FLASHINFER_HIP_ARCHITECTURES variable
-  if(DEFINED FLASHINFER_HIP_ARCHITECTURES AND
-     NOT "${FLASHINFER_HIP_ARCHITECTURES}" STREQUAL "")
-    message(STATUS "Using user-specified HIP architectures: ${FLASHINFER_HIP_ARCHITECTURES}")
-  else()
-    # Auto-detect architectures
-    include(ConfigureHIPArchitectures)
-    set(detected_hip_archs "")
-    detect_hip_architectures(detected_hip_archs)
-    if(detected_hip_archs)
-      set(FLASHINFER_HIP_ARCHITECTURES ${detected_hip_archs} CACHE STRING
-          "CUDA architectures" FORCE)
-      message(STATUS "Setting FLASHINFER_HIP_ARCHITECTURES to detected values: ${FLASHINFER_HIP_ARCHITECTURES}")
-    else()
-      # Default to MI300X architecture
-      set(FLASHINFER_HIP_ARCHITECTURES "gfx942")
-      message(STATUS "No HIP architectures detected, using default: ${HIP_ARCHITECTURES}")
-    endif()
-  endif()
-
-  set(CMAKE_HIP_ARCHITECTURES ${FLASHINFER_HIP_ARCHITECTURES})
-endif()
-
 # Handle automatic enabling of dependent features
 if(FLASHINFER_FP8_TESTS)
   set(FLASHINFER_UNITTESTS ON CACHE BOOL "Tests enabled for FP8" FORCE)
@@ -176,6 +155,12 @@ if(FLASHINFER_ENABLE_FP8)
   # Enable both FP8 formats when FP8 is enabled
   set(FLASHINFER_ENABLE_FP8_E4M3 ON CACHE BOOL "Enable FP8 E4M3 format" FORCE)
   set(FLASHINFER_ENABLE_FP8_E5M2 ON CACHE BOOL "Enable FP8 E5M2 format" FORCE)
+endif()
+
+if(NOT FLASHINFER_ENABLE_FP8)
+  # Enable both FP8 formats when FP8 is enabled
+  set(FLASHINFER_ENABLE_FP8_E4M3 OFF CACHE BOOL "Disable FP8 E4M3 format" FORCE)
+  set(FLASHINFER_ENABLE_FP8_E5M2 OFF CACHE BOOL "Disable FP8 E5M2 format" FORCE)
 endif()
 
 # Ensure FP8 is enabled for FP8 tests/benchmarks

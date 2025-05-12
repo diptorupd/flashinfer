@@ -8,7 +8,7 @@ endif()
 if(FLASHINFER_ENABLE_HIP)
   # Check for HIP
   include(ConfigureRocmPath)
-  find_package(hip REQUIRED)
+  find_package(HIP REQUIRED)
   message(STATUS "Found HIP: ${HIP_VERSION}")
 endif()
 

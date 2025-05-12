@@ -1,5 +1,3 @@
-set(FLASHINFER_FOUND_HIP FALSE)
-
 # Check if a ROCM_PATH envvar is set and verify it exists. If a valid ROCM_PATH
 # exists it will be used to load the HIP cmake modules.
 if(DEFINED ENV{ROCM_PATH})
@@ -17,17 +15,17 @@ endif()
 if(NOT ROCM_PATH)
   if(UNIX AND EXISTS /opt/rocm)
     set(ROCM_PATH /opt/rocm)
+  else()
+    message(
+      FATAL_ERROR
+        "No ROCm installation found. Set a valid ROCM_PATH or install ROCm to "
+        "the default location (/opt/rocm).")
   endif()
-else()
-  message(
-    FATAL_ERROR
-      "No ROCm installation found. Set a valid ROCM_PATH or install ROCm to "
-      "the default location (/opt/rocm).")
 endif()
 
-# Add HIP to the CMAKE_MODULE_PATH and ROCM_PATH to CMAKE_PREFIX_PATH to find
-# the HIP package and other ROCM components
+# Update CMAKE_MODULE_PATH and CMAKE_PREFIX_PATH to ensure we can find the HIP
+# package and other ROCM components
 if(UNIX)
   set(CMAKE_MODULE_PATH ${ROCM_PATH}/lib/cmake/hip ${CMAKE_MODULE_PATH})
-  list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH})
+  list(APPEND CMAKE_PREFIX_PATH${ROCM_PATH})
 endif()
