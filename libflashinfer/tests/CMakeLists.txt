@@ -149,6 +149,22 @@ if(FLASHINFER_FP8_TESTS)
   )
 endif()
 
+# === Launch Configurator Test Configuration ===
+set(LAUNCH_CONFIG_TEST_SOURCES
+    "lauch_configurator/test_occupancy_calculator.cpp"
+    "lauch_configurator/test_configurator_support.cpp"
+    "lauch_configurator/test_configurator_registry.cpp"
+    "lauch_configurator/test_configurator_core.cpp"
+    "lauch_configurator/test_arch_specific_launch_configurator.cpp"
+)
+
+  configure_flashinfer_target(
+    TARGET_NAME test_launch_configurator
+    SOURCES ${LAUNCH_CONFIG_TEST_SOURCES}
+    LINK_LIBS "GTest::gmock;GTest::gtest"
+    INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/lauch_configurator"
+    IS_GTEST ON
+  )
 # cmake-format: on
 
 # === Test Discovery and Targets ===
