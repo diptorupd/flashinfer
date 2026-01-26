@@ -1,0 +1,28 @@
+Comparing against upstream/main...
+  Merge base: 83d1c745
+Found 18 modified Python files in flashinfer/
+✓ Updated coverage include list in pyproject.toml
+  Modified files: 18
+  - flashinfer/__init__.py
+  - flashinfer/activation.py
+  - flashinfer/cascade.py
+  - flashinfer/decode.py
+  - flashinfer/get_include_paths.py
+  - flashinfer/jit/__init__.py
+  - flashinfer/jit/activation.py
+  - flashinfer/jit/attention/__init__.py
+  - flashinfer/jit/attention/pytorch.py
+  - flashinfer/jit/core.py
+  - flashinfer/jit/cpp_ext.py
+  - flashinfer/jit/env.py
+  - flashinfer/jit/utils.py
+  - flashinfer/norm.py
+  - flashinfer/page.py
+  - flashinfer/prefill.py
+  - flashinfer/rope.py
+  - flashinfer/utils.py
+
+Next steps:
+  1. Review changes: git diff pyproject.toml
+  2. Test coverage: pytest --cov --cov-report=term-missing
+  3. Commit: git add pyproject.toml && git commit -m 'Update coverage include list'
