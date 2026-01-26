@@ -220,8 +220,12 @@ python_classes = ["Test*"]
 python_functions = ["test_*"]
 
 [tool.coverage.run]
-source = ["flashinfer"]
+# Note: 'source' is commented out because 'include' would be ignored if source is set
+# source = ["flashinfer"]
 branch = true
+# AMD/HIP modified files - auto-updated by GitHub Action
+include = [
+]
 
 [tool.coverage.report]
 show_missing = true
