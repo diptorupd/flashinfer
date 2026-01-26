@@ -90,6 +90,8 @@ def _check_torch_rocm_compatibility():
     3. PyTorch ROCm version matches system ROCm version (if detectable)
 
     Provides helpful error messages to guide users to correct installation.
+
+    # FIXME: Test test
     """
 
     # Check for torch package
