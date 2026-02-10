@@ -30,7 +30,7 @@ from .jit import (
     get_single_decode_uri,
 )
 from .page import get_seq_lens
-from .prefill import (
+from .prefill_rocm import (
     get_batch_prefill_jit_module,
     get_batch_prefill_module,
     get_single_prefill_module,
