@@ -29,6 +29,7 @@ from .jit import (
     get_batch_decode_uri,
     get_single_decode_uri,
 )
+from .jit.core import logger
 from .page import get_seq_lens
 from .prefill_rocm import (
     get_batch_prefill_jit_module,
@@ -164,7 +165,7 @@ def get_batch_decode_jit_module(module_name: str, jit_module: Any):
             maybe_lse,
             kv_layout_code,
             window_left,
-            enable_pdl,
+            # enable_pdl,  # Not supported by HIP kernels, skipped
             *args,
         )
 
@@ -249,7 +250,7 @@ def get_batch_decode_module(*args):
             maybe_lse,
             kv_layout_code,
             window_left,
-            enable_pdl,
+            # enable_pdl,  # ROCm kernel does not support this parameter yet
             alibi_slopes,
             logits_soft_cap,
             sm_scale,
@@ -1131,6 +1132,11 @@ class BatchDecodeWithPagedKVCacheWrapper:
         """
         if enable_pdl is None:
             enable_pdl = device_support_pdl(q.device)
+        if enable_pdl:
+            logger.warning(
+                "enable_pdl is not supported in the HIP/ROCm backend and will be ignored. "
+                "This parameter is only effective on CUDA devices with sm_90+."
+            )
         k_cache, v_cache = _unpack_paged_kv_cache(paged_kv_cache, self._kv_layout)
         if self._kv_layout == "NHD":
             page_size = k_cache.shape[1]

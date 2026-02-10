@@ -71,9 +71,7 @@ def batch_decode_with_paged_kv_cache_example(
     )
 
     workspace_buffer = torch.empty(32 * 1024 * 1024, dtype=torch.int8, device="cuda:0")
-    wrapper = flashinfer.decode.BatchDecodeWithPagedKVCacheWrapper(
-        workspace_buffer, kv_layout
-    )
+    wrapper = flashinfer.BatchDecodeWithPagedKVCacheWrapper(workspace_buffer, kv_layout)
     wrapper.plan(
         kv_indptr,
         kv_indices,

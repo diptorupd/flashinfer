@@ -9,10 +9,16 @@ from typing import List, Optional, Sequence, Union
 import torch
 from filelock import FileLock
 
-from . import env as jit_env
-from .cpp_ext import generate_ninja_build_for_op, run_ninja
-from .utils import write_if_different
 from ..device_utils import IS_HIP, IS_CUDA
+
+from . import env as jit_env
+
+if IS_CUDA:
+    from .cpp_ext import generate_ninja_build_for_op, run_ninja
+elif IS_HIP:
+    from .cpp_ext_hip import generate_ninja_build_for_op, run_ninja  # type: ignore[no-redef]
+from .utils import write_if_different
+
 
 if IS_CUDA:
     from ..compilation_context import CompilationContext
@@ -207,11 +213,12 @@ def gen_jit_spec(
     verbose = os.environ.get("FLASHINFER_JIT_VERBOSE", "0") == "1"
 
     cflags = ["-O3", "-std=c++17", "-Wno-switch-bool"]
+    if IS_HIP:
+        # Use dynamically-generated flags from CompilationContext (includes arch flags)
+        cflags += current_compilation_context.get_hipcc_flags_list()
     cuda_cflags = [
         "-O3",
         "-std=c++17",
-        f"--threads={os.environ.get('FLASHINFER_NVCC_THREADS', '1')}",
-        "-use_fast_math",
         "-DFLASHINFER_ENABLE_F16",
         "-DFLASHINFER_ENABLE_BF16",
         "-DFLASHINFER_ENABLE_FP8_E4M3",
