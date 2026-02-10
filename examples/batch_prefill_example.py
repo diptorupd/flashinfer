@@ -104,7 +104,7 @@ def batch_prefill_with_paged_kv_cache_example(
     # (num_qo_heads >> num_kv_heads) and small page sizes, which increase the
     # temporary buffer requirements for split-KV attention.
     workspace_buffer = torch.empty(512 * 1024 * 1024, dtype=torch.int8, device="cuda:0")
-    wrapper = flashinfer.prefill.BatchPrefillWithPagedKVCacheWrapper(
+    wrapper = flashinfer.BatchPrefillWithPagedKVCacheWrapper(
         workspace_buffer, kv_layout
     )
     # Create auxiliary data structures for batch prefill attention
@@ -186,19 +186,17 @@ def batch_prefill_with_paged_kv_cache_example(
 
         # Compare with single_prefill_with_kv_cache
         if return_lse:
-            o_ref_i, lse_ref_i = (
-                flashinfer.prefill.single_prefill_with_kv_cache_return_lse(
-                    qi,
-                    ki,
-                    vi,
-                    causal=causal,
-                    kv_layout=kv_layout,
-                    pos_encoding_mode=pos_encoding_mode,
-                    logits_soft_cap=logits_soft_cap,
-                )
+            o_ref_i, lse_ref_i = flashinfer.single_prefill_with_kv_cache_return_lse(
+                qi,
+                ki,
+                vi,
+                causal=causal,
+                kv_layout=kv_layout,
+                pos_encoding_mode=pos_encoding_mode,
+                logits_soft_cap=logits_soft_cap,
             )
         else:
-            o_ref_i = flashinfer.prefill.single_prefill_with_kv_cache(
+            o_ref_i = flashinfer.single_prefill_with_kv_cache(
                 qi,
                 ki,
                 vi,
@@ -301,7 +299,7 @@ def batch_prefill_with_ragged_kv_cache_example(
 
     # NOTE: 512 MB workspace is needed for configurations with high GQA ratios
     workspace_buffer = torch.empty(512 * 1024 * 1024, dtype=torch.int8, device="cuda:0")
-    wrapper = flashinfer.prefill.BatchPrefillWithRaggedKVCacheWrapper(
+    wrapper = flashinfer.BatchPrefillWithRaggedKVCacheWrapper(
         workspace_buffer, kv_layout
     )
     logits_soft_cap = logits_soft_cap if logits_soft_cap > 0 else None
@@ -328,18 +326,16 @@ def batch_prefill_with_ragged_kv_cache_example(
 
     for i in range(batch_size):
         if return_lse:
-            o_ref_i, lse_ref_i = (
-                flashinfer.prefill.single_prefill_with_kv_cache_return_lse(
-                    q[q_indptr[i] : q_indptr[i + 1]],
-                    k[kv_indptr[i] : kv_indptr[i + 1]],
-                    v[kv_indptr[i] : kv_indptr[i + 1]],
-                    causal=causal,
-                    pos_encoding_mode=pos_encoding_mode,
-                    logits_soft_cap=logits_soft_cap,
-                )
+            o_ref_i, lse_ref_i = flashinfer.single_prefill_with_kv_cache_return_lse(
+                q[q_indptr[i] : q_indptr[i + 1]],
+                k[kv_indptr[i] : kv_indptr[i + 1]],
+                v[kv_indptr[i] : kv_indptr[i + 1]],
+                causal=causal,
+                pos_encoding_mode=pos_encoding_mode,
+                logits_soft_cap=logits_soft_cap,
             )
         else:
-            o_ref_i = flashinfer.prefill.single_prefill_with_kv_cache(
+            o_ref_i = flashinfer.single_prefill_with_kv_cache(
                 q[q_indptr[i] : q_indptr[i + 1]],
                 k[kv_indptr[i] : kv_indptr[i + 1]],
                 v[kv_indptr[i] : kv_indptr[i + 1]],

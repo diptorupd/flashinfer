@@ -270,18 +270,18 @@ def get_batch_prefill_module(backend, *args):
             mask_mode,
             layout,
             window_left,
-            enable_pdl,
+            # enable_pdl,  # Not supported by HIP kernels
             maybe_custom_mask,
             maybe_mask_indptr,
             maybe_alibi_slopes,
-            maybe_prefix_len_ptr,
-            maybe_token_pos_in_items_ptr,
-            maybe_max_item_len_ptr,
+            # maybe_prefix_len_ptr,  # Not supported by HIP FA2 kernels
+            # maybe_token_pos_in_items_ptr,  # Not supported by HIP FA2 kernels
+            # maybe_max_item_len_ptr,  # Not supported by HIP FA2 kernels
             logits_soft_cap,
             sm_scale,
             1.0 / rope_scale,  # rope_rcp_scale
             1.0 / rope_theta,  # rope_rcp_theta
-            token_pos_in_items_len,
+            # token_pos_in_items_len,  # Not supported by HIP FA2 kernels
         )
 
         return o
@@ -394,18 +394,18 @@ def get_batch_prefill_module(backend, *args):
             mask_mode,
             layout,
             window_left,
-            enable_pdl,
+            # enable_pdl,  # Not supported by HIP kernels
             maybe_custom_mask,
             maybe_mask_indptr,
             maybe_alibi_slopes,
-            maybe_prefix_len_ptr,
-            maybe_token_pos_in_items_ptr,
-            maybe_max_item_len_ptr,
+            # maybe_prefix_len_ptr,  # Not supported by HIP FA2 kernels
+            # maybe_token_pos_in_items_ptr,  # Not supported by HIP FA2 kernels
+            # maybe_max_item_len_ptr,  # Not supported by HIP FA2 kernels
             logits_soft_cap,
             sm_scale,
             1.0 / rope_scale,  # rope_rcp_scale
             1.0 / rope_theta,  # rope_rcp_theta
-            token_pos_in_items_len,
+            # token_pos_in_items_len,  # Not supported by HIP FA2 kernels
         )
 
         return o
@@ -1711,6 +1711,17 @@ class BatchPrefillWithPagedKVCacheWrapper:
         """
         if enable_pdl is None:
             enable_pdl = device_support_pdl(q.device)
+        if enable_pdl:
+            logger.warning(
+                "enable_pdl is not supported in the HIP/ROCm backend and will be ignored. "
+                "This parameter is only effective on CUDA devices with sm_90+."
+            )
+        if self._prefix_len_ptr is not None or self._token_pos_in_items_ptr is not None:
+            logger.warning(
+                "Token position tracking features (prefix_len_ptr, token_pos_in_items_ptr) "
+                "are not supported in the HIP/ROCm FA2 backend and will be ignored. "
+                "These features are only available in CUDA implementation."
+            )
         k_cache, v_cache = _unpack_paged_kv_cache(paged_kv_cache, self._kv_layout)
         _check_cached_qkv_data_type(
             q, k_cache, self._cached_q_data_type, self._cached_kv_data_type
