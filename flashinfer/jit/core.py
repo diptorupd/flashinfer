@@ -12,7 +12,12 @@ from filelock import FileLock
 from . import env as jit_env
 from .cpp_ext import generate_ninja_build_for_op, run_ninja
 from .utils import write_if_different
-from ..compilation_context import CompilationContext
+from ..device_utils import IS_HIP, IS_CUDA
+
+if IS_CUDA:
+    from ..compilation_context import CompilationContext
+elif IS_HIP:
+    from ..compilation_context_hip import CompilationContext
 
 os.makedirs(jit_env.FLASHINFER_WORKSPACE_DIR, exist_ok=True)
 os.makedirs(jit_env.FLASHINFER_CSRC_DIR, exist_ok=True)
@@ -45,20 +50,57 @@ class FlashInferJITLogger(logging.Logger):
 
 logger = FlashInferJITLogger("flashinfer.jit")
 
+if IS_CUDA:
 
-def check_cuda_arch():
-    # Collect all detected CUDA architectures
-    eligible = False
-    for major, minor in current_compilation_context.TARGET_CUDA_ARCHS:
-        if major >= 8:
-            eligible = True
-        elif major == 7 and minor.isdigit():
-            if int(minor) >= 5:
+    def check_cuda_arch():
+        # Collect all detected CUDA architectures
+        eligible = False
+        for major, minor in current_compilation_context.TARGET_CUDA_ARCHS:
+            if major >= 8:
                 eligible = True
+            elif major == 7 and minor.isdigit():
+                if int(minor) >= 5:
+                    eligible = True
 
-    # Raise error only if all detected architectures are lower than sm75
-    if not eligible:
-        raise RuntimeError("FlashInfer requires GPUs with sm75 or higher")
+        # Raise error only if all detected architectures are lower than sm75
+        if not eligible:
+            raise RuntimeError("FlashInfer requires GPUs with sm75 or higher")
+
+    common_nvcc_flags = [
+        "-DFLASHINFER_ENABLE_FP8_E8M0",
+        "-DFLASHINFER_ENABLE_FP4_E2M1",
+    ]
+    sm90a_nvcc_flags = ["-gencode=arch=compute_90a,code=sm_90a"] + common_nvcc_flags
+    sm100a_nvcc_flags = ["-gencode=arch=compute_100a,code=sm_100a"] + common_nvcc_flags
+    sm103a_nvcc_flags = ["-gencode=arch=compute_103a,code=sm_103a"] + common_nvcc_flags
+    sm110a_nvcc_flags = ["-gencode=arch=compute_110a,code=sm_110a"] + common_nvcc_flags
+    sm120a_nvcc_flags = ["-gencode=arch=compute_120a,code=sm_120a"] + common_nvcc_flags
+    sm121a_nvcc_flags = ["-gencode=arch=compute_121a,code=sm_121a"] + common_nvcc_flags
+elif IS_HIP:
+
+    def check_rocm_arch():
+        """
+        Validate ROCm architecture compatibility for FlashInfer.
+
+        Uses centralized validation from hip_utils to ensure:
+        1. System ROCm version supports the architectures
+        2. FlashInfer has AMD ports for the architectures
+        3. PyTorch was compiled with the architectures
+        """
+        import torch.utils.cpp_extension as torch_cpp_ext
+        from ..hip_utils import validate_flashinfer_rocm_arch
+
+        try:
+            # Let validate_flashinfer_rocm_arch handle all validation
+            # It will raise RuntimeError with detailed messages if validation fails
+            validate_flashinfer_rocm_arch(
+                arch_list=None,  # Uses FLASHINFER_ROCM_ARCH_LIST env or defaults to gfx942
+                torch_cpp_ext_module=torch_cpp_ext,
+                verbose=False,
+            )
+        except RuntimeError as e:
+            # Re-raise with context about where the error occurred
+            raise RuntimeError(f"ROCm architecture validation failed: {e}") from e
 
 
 def clear_cache_dir():
@@ -67,17 +109,6 @@ def clear_cache_dir():
 
         shutil.rmtree(jit_env.FLASHINFER_JIT_DIR)
 
-
-common_nvcc_flags = [
-    "-DFLASHINFER_ENABLE_FP8_E8M0",
-    "-DFLASHINFER_ENABLE_FP4_E2M1",
-]
-sm90a_nvcc_flags = ["-gencode=arch=compute_90a,code=sm_90a"] + common_nvcc_flags
-sm100a_nvcc_flags = ["-gencode=arch=compute_100a,code=sm_100a"] + common_nvcc_flags
-sm103a_nvcc_flags = ["-gencode=arch=compute_103a,code=sm_103a"] + common_nvcc_flags
-sm110a_nvcc_flags = ["-gencode=arch=compute_110a,code=sm_110a"] + common_nvcc_flags
-sm120a_nvcc_flags = ["-gencode=arch=compute_120a,code=sm_120a"] + common_nvcc_flags
-sm121a_nvcc_flags = ["-gencode=arch=compute_121a,code=sm_121a"] + common_nvcc_flags
 
 current_compilation_context = CompilationContext()
 
@@ -172,7 +203,7 @@ def gen_jit_spec(
     extra_include_paths: Optional[List[Union[str, Path]]] = None,
     needs_device_linking: bool = False,
 ) -> JitSpec:
-    check_cuda_arch()
+    check_rocm_arch() if IS_HIP else check_cuda_arch()
     verbose = os.environ.get("FLASHINFER_JIT_VERBOSE", "0") == "1"
 
     cflags = ["-O3", "-std=c++17", "-Wno-switch-bool"]
@@ -186,14 +217,26 @@ def gen_jit_spec(
         "-DFLASHINFER_ENABLE_FP8_E4M3",
         "-DFLASHINFER_ENABLE_FP8_E5M2",
     ]
-    if verbose:
+    # Add CUDA-specific nvcc flags
+    if IS_CUDA:
         cuda_cflags += [
-            "-g",
-            "-lineinfo",
-            "--ptxas-options=-v",
-            "--ptxas-options=--verbose,--register-usage-level=10,--warn-on-local-memory-usage",
-            "-DCUTLASS_DEBUG_TRACE_LEVEL=2",
+            f"--threads={os.environ.get('FLASHINFER_NVCC_THREADS', '1')}",
+            "-use_fast_math",
         ]
+    elif IS_HIP:
+        cuda_cflags += [
+            "-ffast-math",  # HIP equivalent of -use_fast_math
+        ]
+
+    if verbose:
+        if not IS_HIP:
+            cuda_cflags += [
+                "-g",
+                "-lineinfo",
+                "--ptxas-options=-v",
+                "--ptxas-options=--verbose,--register-usage-level=10,--warn-on-local-memory-usage",
+                "-DCUTLASS_DEBUG_TRACE_LEVEL=2",
+            ]
     else:
         # non debug mode
         cuda_cflags += ["-DNDEBUG"]
@@ -202,6 +245,9 @@ def gen_jit_spec(
         cflags += extra_cflags
     if extra_cuda_cflags is not None:
         cuda_cflags += extra_cuda_cflags
+    if extra_include_paths is not None:
+        extra_include_paths = [Path(x) for x in extra_include_paths]
+    sources = [Path(x) for x in sources]
 
     spec = JitSpec(
         name=name,
