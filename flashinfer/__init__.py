@@ -100,6 +100,13 @@ if IS_HIP:
     )
     from .sampling import top_p_renorm_probs as top_p_renorm_probs
     from .sampling import top_p_sampling_from_probs as top_p_sampling_from_probs
+
+    # ========================================
+    # Module Aliases (for CUDA API compatibility)
+    # ========================================
+    from . import decode_rocm as decode
+    from . import prefill_rocm as prefill
+
     from .utils import next_positive_power_of_2 as next_positive_power_of_2
 
 elif IS_CUDA:
