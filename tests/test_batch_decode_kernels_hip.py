@@ -7,6 +7,10 @@ import torch
 from jit_utils import gen_decode_attention_modules, gen_prefill_attention_modules
 
 import flashinfer
+from flashinfer.jit.core import logger
+import logging
+
+logger.setLevel(logging.ERROR)
 
 
 @pytest.fixture(autouse=True, scope="module")
@@ -27,7 +31,6 @@ def warmup_jit():
             [torch.float16],  # q_dtypes
             [
                 torch.float16,
-                torch.float8_e4m3fnuz,
             ],  # kv_dtypes
             [128, 256],  # head_dims
             [0, 1],  # pos_encoding_modes
